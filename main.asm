@@ -20,7 +20,7 @@ user_menu_welcome: db "You are in the User account management menu",10,"Please s
  ;add user texts
 add_user_menu_welcome: db "You can now create a new User",10,"Please enter the Surname:",0
 ask_for_first_name_input: db "Please enter the First name:",0
-ask_fordepartment_input: db "Please enter the department fo the user:",0
+ask_for_department_input: db "Please enter the department fo the user:",0
 ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
 ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",10,"Please enter a differnt USER ID:",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
@@ -48,9 +48,9 @@ confirm_computer_deletion: db "The Computer with following id has been delteted:
 ;Computer Search Menu texts
 computer_search_welcome: db "You are in the Computer Search menu",0
 ask_for_computer_search_id_input: db "Enter the Computer ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
-computer_search_error_output: db "The computer could not be found"
+computer_search_error_output: db "The computer could not be found",0
 
-s
+
 
 ;User Search Menu texts
 user_search_welcome: db "You are in the Main User by Computer Search menu",0
@@ -118,22 +118,147 @@ read_main_menu_input:
 manage_user:
     mov rdi, QWORD user_menu_welcome
     call print_string_new
-    call print_nl_new
+    call print_nl_new    
+    call read_int_new
+    jmp read_manage_user_menu_input    
     
-    ;mov rdi, QWORD userfile
-    ;call read_files
-    mov rdi, [rax]
+read_manage_user_menu_input:
+    cmp rax, 1
+    je add_user
+    cmp rax, 2
+    je delete_user
+    cmp rax, 3
+    je main_menu
+    mov rdi, QWORD inputerror
     call print_string_new
+    call print_nl_new
+    jmp manage_user
     
-    jmp end;
+add_user:
+    mov rdi, QWORD add_user_menu_welcome
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; read surname from RAX
+    mov rdi, QWORD ask_for_first_name_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; read name from RAX
+    mov rdi, QWORD ask_for_department_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; read department from RAX
+    mov rdi, QWORD ask_for_user_id_input
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    ; read id from RAX
+    mov rdi, QWORD ask_for_emai_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; email id from RAX
+    ; check if ID free
+    mov rdi, QWORD confirm_user_input
+    call print_string_new
+    call print_nl_new
+    ; load User info in rdi
+    call print_string_new
+    call print_nl_new
+    jmp manage_user
+    
+    
+delete_user:
+    mov rdi, QWORD delte_user_menu_welcome
+    call print_string_new
+    call print_nl_new
+    call yes_or_no
+    ; jmp to manage_user of no
+    mov rdi, QWORD ask_for_user_id_delete_input
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    ;process user ID, check user id and delete user
+    mov rdi, QWORD confirm_user_deletion
+    call print_string_new
+    call print_nl_new
+    jmp manage_user
+    
 
 manage_computer:
     mov rdi, QWORD computer_menu_welcome
     call print_string_new
     call print_nl_new
+    jmp read_manage_computer_menu_input
+
     
-    jmp end;
-    
+read_manage_computer_menu_input:
+    cmp rax, 1
+    je add_computer
+    cmp rax, 2
+    je delete_computer
+    cmp rax, 3
+    je main_menu
+    mov rdi, QWORD inputerror
+    call print_string_new
+    call print_nl_new
+    jmp manage_user
+
+add_computer:
+    mov rdi, QWORD add_computer_menu_welcome
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    ; read ID from RAX
+    ;check if ID free
+    mov rdi, QWORD ask_for_ip_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; read ip from RAX
+    mov rdi, QWORD ask_for_main_user_id_input
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    ; read main user from RAX
+    ; check if ID exists
+    mov rdi, QWORD ask_for_user_id_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; read id from RAX
+    mov rdi, QWORD ask_for_purchase_date_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    ; date id from RAX
+    mov rdi, QWORD confirm_computer_input
+    call print_string_new
+    call print_nl_new
+    ; load computer info in rdi
+    call print_string_new
+    call print_nl_new
+    jmp manage_computer
+
+delete_computer:
+    mov rdi, QWORD delte_computer_menu_welcome
+    call print_string_new
+    call print_nl_new
+    call yes_or_no
+    ; jmp to manage_user of no
+    mov rdi, QWORD ask_for_computer_id_input
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    ; process computer ID, check computer id and delete computer
+    mov rdi, QWORD confirm_computer_deletion
+    call print_string_new
+    call print_nl_new
+    jmp manage_computer
+        
+                
 search_computer:
     mov rdi, QWORD computer_search_welcome
     call print_string_new
