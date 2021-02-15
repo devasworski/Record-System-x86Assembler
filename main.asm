@@ -6,7 +6,7 @@ section .data
 
 ;Main Menu texts
 hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,0
-main_optionselect: db "Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for Main User of a Computer",10,10,"Enter the number of the menu you want to enter:",10,0
+main_optionselect: db "Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for email of Main User for a Computer",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;error messages
 inputerror: db "I am sorry, but I couldn't understand your input",10,"Please try again:",10,0
@@ -25,7 +25,7 @@ ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
 ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",10,"Please enter a differnt USER ID:",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
 confirm_user_input: db "Thank you. The Following User has been created:",0
- ;delte user texts
+ ;delte user textss
 delte_user_menu_welcome: db "You selected: Delte a user",10,"Is this correct? enter yes(y) or no(n)",0
 ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in following format XXXXXXX:",0
 confirm_user_deletion: db "The User with following id has been delteted:",0
@@ -48,14 +48,19 @@ confirm_computer_deletion: db "The Computer with following id has been delteted:
 ;Computer Search Menu texts
 computer_search_welcome: db "You are in the Computer Search menu",0
 ask_for_computer_search_id_input: db "Enter the Computer ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
+computer_search_result_output: db "Following Computer has been found:",0
 computer_search_error_output: db "The computer could not be found",0
 
 
 
 ;User Search Menu texts
-user_search_welcome: db "You are in the Main User by Computer Search menu",0
+user_search_welcome: db "You are in the Email adress of main user Search menu",0
 ask_for_user_search_id_input: db "Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
-user_search_error_output: db "The user could not be found",0
+user_search_result_output: db "This is the email of the mail user:",0
+user_search_error_output: db "The computer could not be found",0
+
+;text blocks
+email_end: db "@helpdesk.co.uk",0
 
 
 
@@ -263,6 +268,25 @@ search_computer:
     mov rdi, QWORD computer_search_welcome
     call print_string_new
     call print_nl_new
+search_computer_loop:
+    mov rdi, QWORD ask_for_computer_search_id_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    cmp rax, 120 ; check if input = x
+    je manage_computer
+    ;check if computer exists and jmp to search_computer_exists
+    mov rdi, QWORD computer_search_error_output
+    call print_string_new
+    call print_nl_new
+    jmp search_computer_loop
+search_computer_exists:
+    mov rdi, QWORD computer_search_result_output
+    call print_string_new
+    call print_nl_new
+    ; print out computer info
+    jmp search_computer_loop
+    
     
     jmp end;
 
@@ -270,8 +294,26 @@ find_main_user:
     mov rdi, QWORD user_search_welcome
     call print_string_new
     call print_nl_new
-    
-    jmp end;
+find_user_loop:
+    mov rdi, QWORD ask_for_user_search_id_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    cmp rax, 120 ; check if input = x
+    je manage_computer
+    ;check if computer exists and jmp to find_computer_exists  
+    mov rdi, QWORD user_search_error_output
+    call print_string_new
+    call print_nl_new
+    jmp find_user_loop;
+find_computer_exists:
+    mov rdi, QWORD user_search_result_output
+    call print_string_new
+    ; print out email
+    mov rdi, QWORD email_end
+    call print_string_new
+    call print_nl_new
+    jmp find_user_loop;
     
     
 yes_or_no:
@@ -279,9 +321,11 @@ yes_or_no:
     cmp rax, 121
     jne no
     mov rdi, QWORD yes_msg
+    ; set yes flag
     jmp yes_or_no_end
 no:    
     mov rdi, QWORD no_msg
+    ; set no flag
 yes_or_no_end:
     call print_string_new
     call print_nl_new
