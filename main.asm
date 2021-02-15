@@ -186,7 +186,7 @@ delete_user:
     call print_string_new
     call print_nl_new
     call yes_or_no
-    ; jmp to manage_user of no
+    jne manage_user
     mov rdi, QWORD ask_for_user_id_delete_input
     call print_string_new
     call print_nl_new
@@ -266,7 +266,7 @@ delete_computer:
     call print_string_new
     call print_nl_new
     call yes_or_no
-    ; jmp to manage_user of no
+    jne manage_computer
     mov rdi, QWORD ask_for_computer_id_input
     call print_string_new
     call print_nl_new
@@ -345,16 +345,6 @@ find_computer_exists:
 yes_or_no:
     call read_char_new
     cmp rax, 121
-    jne no
-    mov rdi, QWORD yes_msg
-    ; set yes flag
-    jmp yes_or_no_end
-no:    
-    mov rdi, QWORD no_msg
-    ; set no flag
-yes_or_no_end:
-    call print_string_new
-    call print_nl_new
     ret
     
 end:
