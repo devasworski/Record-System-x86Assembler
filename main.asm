@@ -6,7 +6,7 @@ section .data
 
 ;Main Menu texts
 hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,0
-main_optionselect: db "Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for email of Main User for a Computer",10,10,"Enter the number of the menu you want to enter:",10,0
+main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for email of Main User for a Computer",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;error messages
 inputerror: db "I am sorry, but I couldn't understand your input",10,"Please try again:",10,0
@@ -16,7 +16,7 @@ yes_msg: db "You selected Yes",0
 no_msg: db "You selected No",0
 
 ;User Management Menu texts
-user_menu_welcome: db "You are in the User account management menu",10,"Please select on of the following options:",10,10,"1. Add a User",10,"2. Delete a User",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
+user_menu_welcome: db 10,"You are in the User account management menu",10,"Please select on of the following options:",10,10,"1. Add a User",10,"2. Delete a User",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
  ;add user texts
 add_user_menu_welcome: db "You can now create a new User",10,"Please enter the Surname:",0
 ask_for_first_name_input: db "Please enter the First name:",0
@@ -31,7 +31,7 @@ ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in
 confirm_user_deletion: db "The User with following id has been delteted:",0
 
 ;Computer Management Menu texts
-computer_menu_welcome: db "You are in the Computer management menu",10,"Please select one of following options:",10,"1. Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
+computer_menu_welcome: db 10,"You are in the Computer management menu",10,"Please select one of following options:",10,"1. Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
  ;add computer texts
 add_computer_menu_welcome: db "You can now create a new Computer",10,"Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
@@ -46,7 +46,7 @@ ask_for_computer_id_input: db "Please enter the Computer ID you want to deletes 
 confirm_computer_deletion: db "The Computer with following id has been delteted:",0
 
 ;Computer Search Menu texts
-computer_search_welcome: db "You are in the Computer Search menu",0
+computer_search_welcome: db 10,"You are in the Computer Search menu",0
 ask_for_computer_search_id_input: db "Enter the Computer ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
 computer_search_result_output: db "Following Computer has been found:",0
 computer_search_error_output: db "The computer could not be found",0
@@ -54,7 +54,7 @@ computer_search_error_output: db "The computer could not be found",0
 
 
 ;User Search Menu texts
-user_search_welcome: db "You are in the Email adress of main user Search menu",0
+user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
 ask_for_user_search_id_input: db "Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
 user_search_result_output: db "This is the email of the mail user:",0
 user_search_error_output: db "The computer could not be found",0
