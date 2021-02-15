@@ -31,7 +31,7 @@ ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in
 confirm_user_deletion: db "The User with following id has been delteted:",0
 
 ;Computer Management Menu texts
-computer_menu_welcome: db "You are in the Computer management menu",10,"Please select one of following options:",10,"1.Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
+computer_menu_welcome: db "You are in the Computer management menu",10,"Please select one of following options:",10,"1. Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
  ;add computer texts
 add_computer_menu_welcome: db "You can now create a new Computer",10,"Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
@@ -118,6 +118,8 @@ read_main_menu_input:
     mov rdi, QWORD inputerror
     call print_string_new
     call print_nl_new
+    call print_nl_new
+    call print_nl_new
     jmp main_menu
     
 manage_user:
@@ -136,6 +138,8 @@ read_manage_user_menu_input:
     je main_menu
     mov rdi, QWORD inputerror
     call print_string_new
+    call print_nl_new
+    call print_nl_new
     call print_nl_new
     jmp manage_user
     
@@ -172,6 +176,8 @@ add_user:
     ; load User info in rdi
     call print_string_new
     call print_nl_new
+    call print_nl_new
+    call print_nl_new
     jmp manage_user
     
     
@@ -189,6 +195,8 @@ delete_user:
     mov rdi, QWORD confirm_user_deletion
     call print_string_new
     call print_nl_new
+    call print_nl_new
+    call print_nl_new
     jmp manage_user
     
 
@@ -196,6 +204,8 @@ manage_computer:
     mov rdi, QWORD computer_menu_welcome
     call print_string_new
     call print_nl_new
+    
+    call read_int_new
     jmp read_manage_computer_menu_input
 
     
@@ -208,6 +218,8 @@ read_manage_computer_menu_input:
     je main_menu
     mov rdi, QWORD inputerror
     call print_string_new
+    call print_nl_new
+    call print_nl_new
     call print_nl_new
     jmp manage_user
 
@@ -245,6 +257,8 @@ add_computer:
     ; load computer info in rdi
     call print_string_new
     call print_nl_new
+    call print_nl_new
+    call print_nl_new
     jmp manage_computer
 
 delete_computer:
@@ -261,6 +275,8 @@ delete_computer:
     mov rdi, QWORD confirm_computer_deletion
     call print_string_new
     call print_nl_new
+    call print_nl_new
+    call print_nl_new
     jmp manage_computer
         
                 
@@ -273,16 +289,21 @@ search_computer_loop:
     call print_string_new
     call print_nl_new
     call read_string_new
-    cmp rax, 120 ; check if input = x
+    mov bl, BYTE[rax] 
+    cmp bl, 120 ; check if input = x
     je manage_computer
     ;check if computer exists and jmp to search_computer_exists
     mov rdi, QWORD computer_search_error_output
     call print_string_new
     call print_nl_new
+    call print_nl_new
+    call print_nl_new
     jmp search_computer_loop
 search_computer_exists:
     mov rdi, QWORD computer_search_result_output
     call print_string_new
+    call print_nl_new
+    call print_nl_new
     call print_nl_new
     ; print out computer info
     jmp search_computer_loop
@@ -299,11 +320,14 @@ find_user_loop:
     call print_string_new
     call print_nl_new
     call read_string_new
-    cmp rax, 120 ; check if input = x
+    mov bl, BYTE[rax] 
+    cmp bl, 120 ; check if input = x
     je manage_computer
     ;check if computer exists and jmp to find_computer_exists  
     mov rdi, QWORD user_search_error_output
     call print_string_new
+    call print_nl_new
+    call print_nl_new
     call print_nl_new
     jmp find_user_loop;
 find_computer_exists:
@@ -312,6 +336,8 @@ find_computer_exists:
     ; print out email
     mov rdi, QWORD email_end
     call print_string_new
+    call print_nl_new
+    call print_nl_new
     call print_nl_new
     jmp find_user_loop;
     
