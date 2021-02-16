@@ -69,14 +69,17 @@ user_file_location: db "users.cvs",0
 computer_file_location: db "computers.cvs",0
 
 
-;dummy files
+;arrays
+users: times 26000 db 0
+computers: times 2000 dd 0
+
+;users: (4*64 + 4)*100 = 26000 byte
+;computers: (4)*500 = 2000 doublewords
 
 ;Name, FirstName, Department, User ID, email
 ;string64, string64, string64, INT32, string64
-user_file: db "Name,Firstname,Dept,1111111,email@adress.com",0
 ;Computer ID, IP part1, IP part2, IP part3, IP part4, User ID, purchase day, purchase month, purchase year
 ; INT32, INT8, INT8, INT8, INT8, INT32, INT8, INT8, INT16
-computer_file: db "1111111,192,168,0,1,OS,1111111,01,01,2020",0
 
 ;Computer ID, IP, USER ID, Date Purchases
 ; INT32, INT32, INT32, INT32
@@ -87,6 +90,98 @@ computer_file: db "1111111,192,168,0,1,OS,1111111,01,01,2020",0
 
 
 section .text
+
+add_user_name: ;index in rax
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rax, [users+R10]
+add_user_name_loop: ;read in rbx
+    mov dl, BYTE[rbx]
+    mov [rax], dl
+    inc rbx
+    inc rax
+    cmp dl, 0
+    jne add_user_name_loop
+    ret
+
+add_user_firstname: ;index in rax
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rax, [users+R10+64]
+add_user_firstname_loop: ;read in rbx
+    mov dl, BYTE[rbx]
+    mov [rax], dl
+    inc rbx
+    inc rax
+    cmp dl, 0
+    jne add_user_firstname_loop
+    ret
+    
+add_user_department: ;index in rax
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rax, [users+R10+128]
+add_user_department_loop: ;read in rbx
+    mov dl, BYTE[rbx]
+    mov [rax], dl
+    inc rbx
+    inc rax
+    cmp dl, 0
+    jne add_user_department_loop
+    ret
+    
+add_user_email: ;index in rax
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rax, [users+R10+192]
+add_user_email_loop: ;read in rbx
+    mov dl, BYTE[rbx]
+    mov [rax], dl
+    inc rbx
+    inc rax
+    cmp dl, 0
+    jne add_user_email_loop
+    ret
+
+add_user_id: ;index in rax
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rax, [users+R10+256]
+    ;read in rbx
+    mov edx, DWORD ebx
+    mov [rax], edx
+    ret
+    
+write_user:
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rdi, [users+R10]
+    call print_string_new
+    call print_nl_new
+    lea rdi, [users+R10+64]
+    call print_string_new
+    call print_nl_new
+    lea rdi, [users+R10+128]
+    call print_string_new
+    call print_nl_new
+    lea rdi, [users+R10+192]
+    call print_string_new
+    call print_nl_new
+    lea R12, [users+R10+256]
+    mov rdi, [R12]
+    call print_uint_new
+    ret
+    
+    
+
+    
+    
 
 main:
     mov rbp, rsp; for correct debugging 
@@ -143,38 +238,58 @@ read_manage_user_menu_input:
     call print_nl_new
     jmp manage_user
     
+    
 add_user:
     mov rdi, QWORD add_user_menu_welcome
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; read surname from RAX
+    ;----- read surname from RAX
+    mov rbx, rax
+    mov rax, 0 ;index
+    call add_user_name
+    ;-----
     mov rdi, QWORD ask_for_first_name_input
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; read name from RAX
+    ;----- read firstname from RAX
+    mov rbx, rax
+    mov rax, 0 ;index 
+    call add_user_firstname
+    ;-----
     mov rdi, QWORD ask_for_department_input
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; read department from RAX
+    ;----- read department from RAX
+    mov rbx, rax
+    mov rax, 0 ;index 
+    call add_user_department
+    ;-----
     mov rdi, QWORD ask_for_user_id_input
     call print_string_new
     call print_nl_new
     call read_int_new
-    ; read id from RAX
+    ;----- read id from RAX
+    mov rbx, rax
+    mov rax, 0 ;index 
+    ; check if ID free before writing
+    call add_user_id
+    ;-----
     mov rdi, QWORD ask_for_emai_input
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; email id from RAX
-    ; check if ID free
+    ;----- email id from RAX
+    mov rbx, rax
+    mov rax, 0 ;index 
+    call add_user_email
+    ;-----
     mov rdi, QWORD confirm_user_input
     call print_string_new
     call print_nl_new
-    ; load User info in rdi
-    call print_string_new
+    call write_user
     call print_nl_new
     call print_nl_new
     call print_nl_new
