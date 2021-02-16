@@ -6,7 +6,7 @@ section .data
 
 ;Main Menu texts
 hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,0
-main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for email of Main User for a Computer",10,10,"Enter the number of the menu you want to enter:",10,0
+main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for email of Main User by Computer",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;error messages
 inputerror: db "I am sorry, but I couldn't understand your input",10,"Please try again:",10,0
@@ -61,6 +61,11 @@ user_search_error_output: db "The computer could not be found",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
+surname: db "Surname: ",0
+firstname: db "First name: ",0
+dept: db "Department: ",0
+email: db "Email: ",0
+user_id: db "User ID: p",0
 
 
 
@@ -157,22 +162,34 @@ add_user_id: ;index in rax
     mov [rax], edx
     ret
     
-write_user:
+print_user: ; index in rax
     mov R11, 260
     mul R11
     mov R10, rax
+    mov rdi, QWORD surname
+    call print_string_new
     lea rdi, [users+R10]
     call print_string_new
     call print_nl_new
+    mov rdi, QWORD firstname
+    call print_string_new
     lea rdi, [users+R10+64]
     call print_string_new
     call print_nl_new
+    mov rdi, QWORD dept
+    call print_string_new
     lea rdi, [users+R10+128]
     call print_string_new
     call print_nl_new
+    mov rdi, QWORD email
+    call print_string_new
     lea rdi, [users+R10+192]
     call print_string_new
+    mov rdi, QWORD email_end
+    call print_string_new
     call print_nl_new
+    mov rdi, QWORD user_id
+    call print_string_new
     lea R12, [users+R10+256]
     mov rdi, [R12]
     call print_uint_new
@@ -289,7 +306,8 @@ add_user:
     mov rdi, QWORD confirm_user_input
     call print_string_new
     call print_nl_new
-    call write_user
+    call print_nl_new
+    call print_user
     call print_nl_new
     call print_nl_new
     call print_nl_new
