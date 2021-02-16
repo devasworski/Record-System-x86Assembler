@@ -77,6 +77,7 @@ computer_file_location: db "computers.cvs",0
 
 ;index
 user_index: dq 0
+computer_index: dq 0
 
 ;arrays
 users: times 26000 db 0
@@ -99,6 +100,90 @@ computers: times 2000 dd 0
 
 
 section .text
+
+add_computer_id:
+    mov rax, QWORD[computer_index]
+    mov R11, 4
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10]
+    ;read in rbx
+    mov edx, DWORD ebx
+    mov [rax], edx
+    ret
+    
+print_computer: ; index in rax
+    mov R11, 4
+    mul R11
+    mov R10, rax
+    
+    
+    lea R12, [computers+R10]
+    mov rdi, [R12]
+    call print_uint_new 
+    call print_nl_new
+    ret
+    
+search_computer_id:
+    
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+    mov QWORD[rbp-4], 0
+    mov rdx, QWORD[computer_index]
+    
+search_computer_id_loop: ; search id in R13
+    cmp [rbp-4], rdx
+    je computer_search_failed
+    mov rax, [rbp-4]
+    mov R11, 4
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10]
+    mov R14, [rbp-4]
+    inc QWORD[rbp-4]
+    cmp R13, [rax]
+    jne search_computer_id_loop
+    mov rax, R14;return index in rax
+    pop rbp
+    add rsp, 32
+    ret
+computer_search_failed:
+    sub rax, 504 ;return error 504 in rax
+    pop rbp
+    add rsp, 32
+    ret
+
+
+search_user_id:
+    
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+    mov QWORD[rbp-4], 0
+    mov rdx, QWORD[user_index]
+    
+search_user_id_loop: ; search id in R13
+    cmp [rbp-4], rdx
+    je user_search_failed
+    mov rax, [rbp-4]
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rax, [users+R10+256]
+    mov R14, [rbp-4]
+    inc QWORD[rbp-4]
+    cmp R13, [rax]
+    jne search_user_id_loop
+    mov rax, R14;return index in rax
+    pop rbp
+    add rsp, 32
+    ret
+user_search_failed:
+    sub rax, -1 ;return error -1 in rax
+    pop rbp
+    add rsp, 32
+    ret  
 
 add_user_name:
     mov rax, QWORD[user_index]
@@ -201,7 +286,7 @@ print_user: ;index in rax
     call print_string_new
     lea R12, [users+R10+256]
     mov rdi, [R12]
-    call print_uint_new
+    call print_uint_new ; make it appear in the format XXXXXXX
     ret
     
     
@@ -266,6 +351,7 @@ read_manage_user_menu_input:
     
     
 add_user:
+    ; check user_index below 499, otherwise give error storage full
     mov rdi, QWORD add_user_menu_welcome
     call print_string_new
     call print_nl_new
@@ -289,6 +375,7 @@ add_user:
     call print_nl_new
     call read_int_new
     mov rbx, rax
+    ; check if ID below 9999999
     ; check if ID free before writing
     call add_user_id
     mov rdi, QWORD ask_for_emai_input
@@ -357,8 +444,9 @@ add_computer:
     call print_string_new
     call print_nl_new
     call read_int_new
-    ; read ID from RAX
+    mov rbx, rax
     ;check if ID free
+    call add_computer_id
     mov rdi, QWORD ask_for_ip_input
     call print_string_new
     call print_nl_new
@@ -370,11 +458,6 @@ add_computer:
     call read_int_new
     ; read main user from RAX
     ; check if ID exists
-    mov rdi, QWORD ask_for_user_id_input
-    call print_string_new
-    call print_nl_new
-    call read_string_new
-    ; read id from RAX
     mov rdi, QWORD ask_for_purchase_date_input
     call print_string_new
     call print_nl_new
@@ -383,11 +466,11 @@ add_computer:
     mov rdi, QWORD confirm_computer_input
     call print_string_new
     call print_nl_new
-    ; load computer info in rdi
-    call print_string_new
+    mov rax, QWORD[computer_index]
+    call print_computer
     call print_nl_new
     call print_nl_new
-    call print_nl_new
+    inc QWORD[computer_index]
     jmp manage_computer
 
 delete_computer:
@@ -422,6 +505,12 @@ search_computer_loop:
     cmp bl, 120 ; check if input = x
     je manage_computer
     ;check if computer exists and jmp to search_computer_exists
+    mov rdi, rax
+    call atoi
+    mov R13, rax
+    call search_computer_id
+    cmp rax, 504
+    jne search_computer_exists    
     mov rdi, QWORD computer_search_error_output
     call print_string_new
     call print_nl_new
@@ -430,11 +519,11 @@ search_computer_loop:
     jmp search_computer_loop
 search_computer_exists:
     mov rdi, QWORD computer_search_result_output
+    push rax
     call print_string_new
     call print_nl_new
-    call print_nl_new
-    call print_nl_new
-    ; print out computer info
+    pop rax
+    call print_computer
     jmp search_computer_loop
     
     
