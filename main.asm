@@ -66,6 +66,9 @@ firstname: db "First name: ",0
 dept: db "Department: ",0
 email: db "Email: ",0
 user_id: db "User ID: p",0
+computer_id: db "Computer ID: c",0
+purchase_date: db "Purchase Date: ",0
+computer_ip: db "IP Adress: ",0
 
 
 
@@ -101,15 +104,73 @@ computers: times 2000 dd 0
 
 section .text
 
-add_computer_id:
+add_computer_id: ;read from rbx
     mov rax, QWORD[computer_index]
     mov R11, 4
     mul R11
     mov R10, rax
     lea rax, [computers+R10]
-    ;read in rbx
     mov edx, DWORD ebx
     mov [rax], edx
+    ret
+    
+add_computer_ip: ;read from rbx
+    ;read till dot or null then call atoi put in the 2 8bit register and then left shift to upper 16bit and then fill up lower
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+    
+    
+    mov rax, QWORD[computer_index]
+    mov R11, 4
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+1]
+    mov DWORD[rax], 0
+    add_computer_ip_loop1: ;read from rbx
+    mov R14,  0
+    mov dl, BYTE[rbx]
+    add_computer_ip_loop2:
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    mov dl, BYTE[rbx]
+    cmp dl, 0
+    je process_read_ip_part
+    cmp dl, 46
+    jne add_computer_ip_loop2
+process_read_ip_part:
+    mov [rbp], BYTE 0
+    mov rdi, rsp
+    push rax
+    call atoi
+    xor R13, R13
+    mov R13, rax 
+    pop rax
+    xor R12, R12
+    mov R12, [rax]
+    shl R12, 8
+    mov R12B, R13B
+    mov [rax], R12
+    cmp dl, 0
+    je add_computer_ip_end
+    jmp add_computer_ip_loop1
+add_computer_ip_end:
+    pop rbp
+    add rsp, 32
+    ret
+    
+add_computer_main_user_id: ;read from rbx
+    mov rax, QWORD[computer_index]
+    mov R11, 4
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+2]
+    mov edx, DWORD ebx
+    mov [rax], edx
+    ret
+    
+add_computer_purchase_date: 
     ret
     
 print_computer: ; index in rax
@@ -117,10 +178,22 @@ print_computer: ; index in rax
     mul R11
     mov R10, rax
     
-    
+    mov rdi, QWORD computer_id
+    call print_string_new
     lea R12, [computers+R10]
     mov rdi, [R12]
     call print_uint_new 
+    call print_nl_new
+    mov rdi, QWORD computer_ip
+    call print_string_new
+    
+    call print_nl_new
+    mov rdi, QWORD purchase_date
+    call print_string_new
+    
+    call print_nl_new
+    mov rdi, QWORD user_id
+    call print_string_new
     call print_nl_new
     ret
     
@@ -451,7 +524,8 @@ add_computer:
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; read ip from RAX
+    mov rbx, rax
+    call add_computer_ip
     mov rdi, QWORD ask_for_main_user_id_input
     call print_string_new
     call print_nl_new
