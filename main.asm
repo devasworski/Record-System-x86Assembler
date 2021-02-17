@@ -114,7 +114,7 @@ add_computer_id: ;read from rbx
     mov DWORD[rax], edx
     ret
     
-;add_computer_ip: ;read from rbx
+add_computer_ip: ;read from rbx
     ;read till dot or null then call atoi put in the 2 8bit register and then left shift to upper 16bit and then fill up lower
     push  rbp
     mov rbp, rsp
@@ -138,18 +138,19 @@ add_computer_id: ;read from rbx
     cmp dl, 46
     jne add_computer_ip_loop2
 process_read_ip_part:
-    mov [rbp], BYTE 0
+    mov BYTE [rsp+R14], BYTE 0
+    mov R15, rax
     mov rdi, rsp
-    push rax
     call atoi ; DOES NOT WORK
     mov R13, rax 
-    pop rax
+    mov rax, R15
     mov R12, [rax]
     shl R12, 8
     mov R12B, R13B
     mov [rax], R12
     cmp dl, 0
     je add_computer_ip_end
+    inc rbx
     jmp add_computer_ip_loop1
 add_computer_ip_end:
 
@@ -157,7 +158,7 @@ add_computer_ip_end:
     add rsp, 32
     ret
     
-add_computer_ip:   
+;add_computer_ip:   
     mov rax, QWORD[computer_index]
     mov R11, 16
     mul R11
