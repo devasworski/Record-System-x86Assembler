@@ -106,7 +106,7 @@ section .text
 
 add_computer_id: ;read from rbx
     mov rax, QWORD[computer_index]
-    mov R11, 4
+    mov R11, 16
     mul R11
     mov R10, rax
     lea rax, [computers+R10]
@@ -114,19 +114,17 @@ add_computer_id: ;read from rbx
     mov DWORD[rax], edx
     ret
     
-add_computer_ip: ;read from rbx
+;add_computer_ip: ;read from rbx
     ;read till dot or null then call atoi put in the 2 8bit register and then left shift to upper 16bit and then fill up lower
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
     
-    
     mov rax, QWORD[computer_index]
-    mov R11, 4
+    mov R11, 16
     mul R11
     mov R10, rax
     lea rax, [computers+R10+4]
-    ;mov DWORD[rax], 0
     add_computer_ip_loop1: ;read from rbx
     mov R14,  0
     mov dl, BYTE[rbx]
@@ -143,11 +141,9 @@ process_read_ip_part:
     mov [rbp], BYTE 0
     mov rdi, rsp
     push rax
-    call atoi
-    ;xor R13, R13
+    call atoi ; DOES NOT WORK
     mov R13, rax 
     pop rax
-    ;xor R12, R12
     mov R12, [rax]
     shl R12, 8
     mov R12B, R13B
@@ -156,13 +152,24 @@ process_read_ip_part:
     je add_computer_ip_end
     jmp add_computer_ip_loop1
 add_computer_ip_end:
+
     pop rbp
     add rsp, 32
     ret
     
+add_computer_ip:   
+    mov rax, QWORD[computer_index]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+4]
+    mov edx, DWORD 0xc0a8010b
+    mov [rax], edx
+    ret 
+    
 add_computer_main_user_id: ;read from rbx
     mov rax, QWORD[computer_index]
-    mov R11, 4
+    mov R11, 16
     mul R11
     mov R10, rax
     lea rax, [computers+R10+8]
@@ -171,10 +178,17 @@ add_computer_main_user_id: ;read from rbx
     ret
     
 add_computer_purchase_date: 
+    mov rax, QWORD[computer_index]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+12]
+    mov edx, DWORD 0xffffffff
+    mov [rax], edx
     ret
     
 print_computer: ; index in rax
-    mov R11, 4
+    mov R11, 16
     mul R11
     mov R10, rax
     
@@ -216,18 +230,20 @@ print_computer: ; index in rax
     mov dl, R13B
     mov rdi, rdx
     call print_int_new
-    call print_nl_new
-        
-    mov rdi, [R12]
     
+    
+    call print_nl_new
+    mov rdi, QWORD user_id
+    call print_string_new
+    lea R12D, [computers+R10+8]
+    mov edi, [R12]
+    call print_uint_new 
     
     call print_nl_new
     mov rdi, QWORD purchase_date
     call print_string_new
     
     call print_nl_new
-    mov rdi, QWORD user_id
-    call print_string_new
     call print_nl_new
     ret
     
@@ -564,8 +580,9 @@ add_computer:
     call print_string_new
     call print_nl_new
     call read_int_new
-    ; read main user from RAX
+    mov rbx, rax
     ; check if ID exists
+    call add_computer_main_user_id
     mov rdi, QWORD ask_for_purchase_date_input
     call print_string_new
     call print_nl_new
