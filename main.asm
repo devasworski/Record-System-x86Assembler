@@ -111,7 +111,7 @@ add_computer_id: ;read from rbx
     mov R10, rax
     lea rax, [computers+R10]
     mov edx, DWORD ebx
-    mov [rax], edx
+    mov DWORD[rax], edx
     ret
     
 add_computer_ip: ;read from rbx
@@ -125,8 +125,8 @@ add_computer_ip: ;read from rbx
     mov R11, 4
     mul R11
     mov R10, rax
-    lea rax, [computers+R10+1]
-    mov DWORD[rax], 0
+    lea rax, [computers+R10+4]
+    ;mov DWORD[rax], 0
     add_computer_ip_loop1: ;read from rbx
     mov R14,  0
     mov dl, BYTE[rbx]
@@ -144,10 +144,10 @@ process_read_ip_part:
     mov rdi, rsp
     push rax
     call atoi
-    xor R13, R13
+    ;xor R13, R13
     mov R13, rax 
     pop rax
-    xor R12, R12
+    ;xor R12, R12
     mov R12, [rax]
     shl R12, 8
     mov R12B, R13B
@@ -165,7 +165,7 @@ add_computer_main_user_id: ;read from rbx
     mov R11, 4
     mul R11
     mov R10, rax
-    lea rax, [computers+R10+2]
+    lea rax, [computers+R10+8]
     mov edx, DWORD ebx
     mov [rax], edx
     ret
@@ -180,12 +180,46 @@ print_computer: ; index in rax
     
     mov rdi, QWORD computer_id
     call print_string_new
-    lea R12, [computers+R10]
-    mov rdi, [R12]
+    lea R12D, [computers+R10]
+    mov edi, [R12]
     call print_uint_new 
     call print_nl_new
+    
     mov rdi, QWORD computer_ip
     call print_string_new
+    lea R11, [computers+R10+4]
+    mov R12D, [R11]
+    mov R13W, R12W
+    shr R12, 16
+    mov R14W, R12W
+    xor rdx, rdx
+    mov dx, R14W
+    shr dx, 8
+    mov rdi, rdx
+    call print_int_new
+    mov rdi, 46
+    call print_char_new
+    xor rdx, rdx
+    mov dl, R14B
+    mov rdi, rdx
+    call print_int_new
+    mov rdi, 46
+    call print_char_new
+    xor rdx, rdx
+    mov dx, R13W
+    shr dx, 8
+    mov rdi, rdx
+    call print_int_new
+    mov rdi, 46
+    call print_char_new
+    xor rdx, rdx
+    mov dl, R13B
+    mov rdi, rdx
+    call print_int_new
+    call print_nl_new
+        
+    mov rdi, [R12]
+    
     
     call print_nl_new
     mov rdi, QWORD purchase_date
