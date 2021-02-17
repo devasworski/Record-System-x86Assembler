@@ -35,7 +35,7 @@ computer_menu_welcome: db 10,"You are in the Computer management menu",10,"Pleas
  ;add computer texts
 add_computer_menu_welcome: db "You can now create a new Computer",10,"Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
-ask_for_ip_input: db "Please enter the computer ID in the format XXX.XXX.XXX.XXX:",0
+ask_for_ip_input: db "Please enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
 ask_for_main_user_id_input: db "Please enter the ID of the main user in the following Format XXXXXXX:",0
 ask_for_existing_user_id_input: db "I am sorry, but I can not find this USER ID",10,"Please enter an exisiting USER ID:",0
 ask_for_purchase_date_input: db "Please enter the Date of purchase in following Format dd.mm.yyyy:",0
@@ -56,7 +56,7 @@ computer_search_error_output: db "The computer could not be found",0
 ;User Search Menu texts
 user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
 ask_for_user_search_id_input: db "Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
-user_search_result_output: db "This is the email of the mail user:",0
+user_search_result_output: db "This is the email of the mail user: ",0
 user_search_error_output: db "The computer could not be found",0
 
 ;text blocks
@@ -253,19 +253,19 @@ search_computer_id:
     mov rbp, rsp
     sub rsp, 32 
     mov QWORD[rbp-4], 0
-    mov rdx, QWORD[computer_index]
     
 search_computer_id_loop: ; search id in R13
+    mov rdx, QWORD[computer_index]
     cmp [rbp-4], rdx
     je computer_search_failed
     mov rax, [rbp-4]
-    mov R11, 4
+    mov R11, 16
     mul R11
     mov R10, rax
     lea rax, [computers+R10]
     mov R14, [rbp-4]
     inc QWORD[rbp-4]
-    cmp R13, [rax]
+    cmp R13D, [rax]
     jne search_computer_id_loop
     mov rax, R14;return index in rax
     pop rbp
@@ -418,7 +418,7 @@ print_user: ;index in rax
     
 
 main:
-    mov rbp, rsp; for correct debugging 
+    mov rbp, rsp
     push  rbp
     mov rbp, rsp
     sub rsp, 32
@@ -587,7 +587,7 @@ add_computer:
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; date id from RAX
+    ; date from RAX
     mov rdi, QWORD confirm_computer_input
     call print_string_new
     call print_nl_new
@@ -627,9 +627,8 @@ search_computer_loop:
     call print_nl_new
     call read_string_new
     mov bl, BYTE[rax] 
-    cmp bl, 120 ; check if input = x
+    cmp bl, 120
     je manage_computer
-    ;check if computer exists and jmp to search_computer_exists
     mov rdi, rax
     call atoi
     mov R13, rax
@@ -664,9 +663,14 @@ find_user_loop:
     call print_nl_new
     call read_string_new
     mov bl, BYTE[rax] 
-    cmp bl, 120 ; check if input = x
+    cmp bl, 120
     je manage_computer
-    ;check if computer exists and jmp to find_computer_exists  
+    mov rdi, rax
+    call atoi
+    mov R13, rax
+    call search_computer_id
+    cmp rax, 504
+    jne find_computer_exists    
     mov rdi, QWORD user_search_error_output
     call print_string_new
     call print_nl_new
@@ -675,8 +679,20 @@ find_user_loop:
     jmp find_user_loop;
 find_computer_exists:
     mov rdi, QWORD user_search_result_output
+    push rax
     call print_string_new
-    ; print out email
+    pop rax
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+8]
+    mov R13, [rax] 
+    call search_user_id
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rdi, [users+R10+192]
+    call print_string_new
     mov rdi, QWORD email_end
     call print_string_new
     call print_nl_new
