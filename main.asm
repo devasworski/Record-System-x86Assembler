@@ -141,7 +141,7 @@ process_read_ip_part:
     mov BYTE [rsp+R14], BYTE 0
     mov R15, rax
     mov rdi, rsp
-    call atoi ; DOES NOT WORK
+    call atoi
     mov R13, rax 
     mov rax, R15
     mov R12, [rax]
@@ -158,15 +158,6 @@ add_computer_ip_end:
     add rsp, 32
     ret
     
-;add_computer_ip:   
-    mov rax, QWORD[computer_index]
-    mov R11, 16
-    mul R11
-    mov R10, rax
-    lea rax, [computers+R10+4]
-    mov edx, DWORD 0xc0a8010b
-    mov [rax], edx
-    ret 
     
 add_computer_main_user_id: ;read from rbx
     mov rax, QWORD[computer_index]
@@ -178,7 +169,7 @@ add_computer_main_user_id: ;read from rbx
     mov [rax], edx
     ret
     
-add_computer_purchase_date: 
+;add_computer_purchase_date: 
     mov rax, QWORD[computer_index]
     mov R11, 16
     mul R11
@@ -186,6 +177,96 @@ add_computer_purchase_date:
     lea rax, [computers+R10+12]
     mov edx, DWORD 0xffffffff
     mov [rax], edx
+    ret
+    
+add_computer_purchase_date: ;read from rbx
+    ;read till dot or null then call atoi put in the 2 8bit register and then left shift to upper 16bit and then fill up lower
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+    
+    mov rax, QWORD[computer_index]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+12]
+
+    mov R14, 0
+    mov dl, BYTE[rbx];d
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    mov dl, BYTE[rbx];d
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    inc rbx;.
+    inc R14
+    mov BYTE [rsp+R14], BYTE 0  
+    mov R15, rax
+    mov rdi, rsp
+    call atoi
+    mov R13, rax 
+    mov rax, R15
+    mov R12, [rax]
+    shl R12, 8
+    mov R12B, R13B
+    mov [rax], R12
+    
+     mov R14, 0
+    mov dl, BYTE[rbx];m
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    mov dl, BYTE[rbx];m
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    inc rbx;.
+    inc R14
+    mov BYTE [rsp+R14], BYTE 0
+    mov R15, rax
+    mov rdi, rsp
+    call atoi
+    mov R13, rax 
+    mov rax, R15
+    mov R12, [rax]
+    shl R12, 8
+    mov R12B, R13B
+    mov [rax], R12
+    
+    mov R14, 0
+    mov dl, BYTE[rbx];y
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    mov dl, BYTE[rbx];y
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    mov dl, BYTE[rbx];y
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    mov dl, BYTE[rbx];y
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    inc rbx;.
+    inc R14
+    mov BYTE [rsp+R14], BYTE 0   
+    mov R15, rax
+    mov rdi, rsp
+    call atoi
+    mov R13, rax 
+    mov rax, R15
+    mov R12, [rax]
+    shl R12, 16
+    mov R12W, R13W
+    mov [rax], R12
+.add_computer_purchase_date_end:
+    pop rbp
+    add rsp, 32
     ret
     
 print_computer: ; index in rax
@@ -588,7 +669,8 @@ add_computer:
     call print_string_new
     call print_nl_new
     call read_string_new
-    ; date from RAX
+    mov rbx, rax
+    call add_computer_purchase_date
     mov rdi, QWORD confirm_computer_input
     call print_string_new
     call print_nl_new
