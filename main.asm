@@ -169,18 +169,8 @@ add_computer_main_user_id: ;read from rbx
     mov [rax], edx
     ret
     
-;add_computer_purchase_date: 
-    mov rax, QWORD[computer_index]
-    mov R11, 16
-    mul R11
-    mov R10, rax
-    lea rax, [computers+R10+12]
-    mov edx, DWORD 0xffffffff
-    mov [rax], edx
-    ret
     
 add_computer_purchase_date: ;read from rbx
-    ;read till dot or null then call atoi put in the 2 8bit register and then left shift to upper 16bit and then fill up lower
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -264,7 +254,7 @@ add_computer_purchase_date: ;read from rbx
     shl R12, 16
     mov R12W, R13W
     mov [rax], R12
-.add_computer_purchase_date_end:
+    
     pop rbp
     add rsp, 32
     ret
@@ -324,6 +314,28 @@ print_computer: ; index in rax
     call print_nl_new
     mov rdi, QWORD purchase_date
     call print_string_new
+    lea R11, [computers+R10+12]
+    mov R12D, [R11]
+    mov R13W, R12W
+    shr R12, 16
+    mov R14W, R12W
+    xor rdx, rdx
+    mov dx, R14W
+    shr dx, 8
+    mov rdi, rdx
+    call print_int_new
+    mov rdi, 46
+    call print_char_new
+    xor rdx, rdx
+    mov dl, R14B
+    mov rdi, rdx
+    call print_int_new
+    mov rdi, 46
+    call print_char_new
+    xor rdx, rdx
+    mov dx, R13W
+    mov rdi, rdx
+    call print_int_new
     
     call print_nl_new
     call print_nl_new
