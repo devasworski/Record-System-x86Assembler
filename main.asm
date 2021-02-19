@@ -104,6 +104,54 @@ computers: times 2000 dd 0
 
 section .text
 
+delete_computer_from_array: ; index in rax
+
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+    
+    mov QWORD [rsp+16], rax ;index+1
+    inc QWORD [rsp+16]
+    mov QWORD [rsp+8], rax ;index
+
+.loop1:
+    mov QWORD [rsp+24], 0;counter
+    mov rax, QWORD [rsp+16]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea R15, [computers+R10]
+    
+    mov rax, QWORD [rsp+8]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rcx, [computers+R10]
+    mov rdx, R15
+    
+.loop2:
+    xor R12, R12
+    mov R12B, BYTE[rdx]
+    mov BYTE[rcx], R12B
+    inc QWORD [rsp+24]
+    inc rdx
+    inc rcx
+    cmp QWORD [rsp+24], 128
+    jne .loop2
+    
+    mov R14, QWORD[computer_index]
+    cmp [rsp+8], R14
+    je .end
+    inc QWORD [rsp+16]
+    inc QWORD [rsp+8]
+    jmp .loop1
+
+.end:;make object in index+1 0
+    dec QWORD[computer_index]
+    pop rbp
+    add rsp, 32
+    ret
+
 add_computer_id: ;read from rbx
     mov rax, QWORD[computer_index]
     mov R11, 16
@@ -366,7 +414,7 @@ search_computer_id_loop: ; search id in R13
     add rsp, 32
     ret
 computer_search_failed:
-    sub rax, 504 ;return error 504 in rax
+    mov rax, 504 ;return error 504 in rax
     pop rbp
     add rsp, 32
     ret
@@ -397,7 +445,7 @@ search_user_id_loop: ; search id in R13
     add rsp, 32
     ret
 user_search_failed:
-    sub rax, -1 ;return error -1 in rax
+    mov rax, 504 ;return error 504 in rax
     pop rbp
     add rsp, 32
     ret  
@@ -702,8 +750,22 @@ delete_computer:
     mov rdi, QWORD ask_for_computer_id_input
     call print_string_new
     call print_nl_new
-    call read_int_new
+    call read_uint_new ;DOES NOT READ
     ; process computer ID, check computer id and delete computer
+    call search_computer_id
+    mov rax, 0; for test
+    cmp rax, 504
+    push rax
+    jne .cp_exists 
+    mov rdi, QWORD computer_search_error_output
+    call print_string_new
+    call print_nl_new
+    call print_nl_new
+    call print_nl_new
+    jmp manage_computer
+.cp_exists:   
+    pop rax 
+    call delete_computer_from_array
     mov rdi, QWORD confirm_computer_deletion
     call print_string_new
     call print_nl_new
