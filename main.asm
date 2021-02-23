@@ -443,19 +443,19 @@ search_computer_id:
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
-    mov QWORD[rbp-4], 0
+    mov QWORD[rbp-8], 0
     
 search_computer_id_loop: ; search id in R13
     mov rdx, QWORD[computer_index]
-    cmp [rbp-4], rdx
+    cmp [rbp-8], rdx
     je computer_search_failed
-    mov rax, [rbp-4]
+    mov rax, [rbp-8]
     mov R11, 16
     mul R11
     mov R10, rax
     lea rax, [computers+R10]
-    mov R14, [rbp-4]
-    inc QWORD[rbp-4]
+    mov R14, [rbp-8]
+    inc QWORD[rbp-8]
     cmp R13D, [rax]
     jne search_computer_id_loop
     mov rax, R14;return index in rax
@@ -475,9 +475,9 @@ search_user_id:
     mov rbp, rsp
     sub rsp, 32 
     mov QWORD[rbp-8], 0
-    mov rdx, QWORD[user_index]
     
 search_user_id_loop: ; search id in R13
+    mov rdx, QWORD[user_index]
     cmp [rbp-8], rdx
     je user_search_failed
     mov rax, [rbp-8]
@@ -722,7 +722,7 @@ delete_user:
     call print_nl_new
     call read_uint_new ;WHY THE HECK DOES THIS NOT WORK????
     ;process user ID, check user id and delete user
-    ;call search_user_id
+    call search_user_id
     mov rax, 0; for test
     cmp rax, 504
     push rax
