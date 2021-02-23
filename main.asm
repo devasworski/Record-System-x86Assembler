@@ -29,6 +29,7 @@ confirm_user_input: db "Thank you. The Following User has been created:",0
 delte_user_menu_welcome: db "You selected: Delte a user",10,"Is this correct? enter yes(y) or no(n)",0
 ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in following format XXXXXXX:",0
 confirm_user_deletion: db "The User with following id has been delteted:",0
+user_search_error_output: db "The User could not be found",0
 
 ;Computer Management Menu texts
 computer_menu_welcome: db 10,"You are in the Computer management menu",10,"Please select one of following options:",10,"1. Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
@@ -54,10 +55,10 @@ computer_search_error_output: db "The computer could not be found",0
 
 
 ;User Search Menu texts
-user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
+computer_user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
 ask_for_user_search_id_input: db "Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
-user_search_result_output: db "This is the email of the mail user: ",0
-user_search_error_output: db "The computer could not be found",0
+computer_user_search_result_output: db "This is the email of the mail user: ",0
+computer_user_search_error_output: db "The computer could not be found",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
@@ -104,6 +105,54 @@ computers: times 2000 dd 0
 
 section .text
 
+delete_user_from_array: ; index in rax
+
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+    
+    mov QWORD [rsp+16], rax ;index+1
+    inc QWORD [rsp+16]
+    mov QWORD [rsp+8], rax ;index
+
+.loop1:
+    mov QWORD [rsp+24], 0;counter
+    mov rax, QWORD [rsp+16]
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea R15, [users+R10]
+    
+    mov rax, QWORD [rsp+8]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rcx, [users+R10]
+    mov rdx, R15
+    
+.loop2:
+    xor R12, R12
+    mov R12B, BYTE[rdx]
+    mov BYTE[rcx], R12B
+    inc QWORD [rsp+24]
+    inc rdx
+    inc rcx
+    cmp QWORD [rsp+24], 260
+    jne .loop2
+    
+    mov R14, QWORD[user_index]
+    cmp [rsp+8], R14
+    je .end
+    inc QWORD [rsp+16]
+    inc QWORD [rsp+8]
+    jmp .loop1
+
+.end:;make object in index+1 0
+    dec QWORD[user_index]
+    pop rbp
+    add rsp, 32
+    ret
+
 delete_computer_from_array: ; index in rax
 
     push  rbp
@@ -136,7 +185,7 @@ delete_computer_from_array: ; index in rax
     inc QWORD [rsp+24]
     inc rdx
     inc rcx
-    cmp QWORD [rsp+24], 128
+    cmp QWORD [rsp+24], 16
     jne .loop2
     
     mov R14, QWORD[computer_index]
@@ -425,19 +474,19 @@ search_user_id:
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
-    mov QWORD[rbp-4], 0
+    mov QWORD[rbp-8], 0
     mov rdx, QWORD[user_index]
     
 search_user_id_loop: ; search id in R13
-    cmp [rbp-4], rdx
+    cmp [rbp-8], rdx
     je user_search_failed
-    mov rax, [rbp-4]
+    mov rax, [rbp-8]
     mov R11, 260
     mul R11
     mov R10, rax
     lea rax, [users+R10+256]
-    mov R14, [rbp-4]
-    inc QWORD[rbp-4]
+    mov R14, [rbp-8]
+    inc QWORD[rbp-8]
     cmp R13, [rax]
     jne search_user_id_loop
     mov rax, R14;return index in rax
@@ -671,8 +720,21 @@ delete_user:
     mov rdi, QWORD ask_for_user_id_delete_input
     call print_string_new
     call print_nl_new
-    call read_int_new
+    call read_uint_new ;WHY THE HECK DOES THIS NOT WORK????
     ;process user ID, check user id and delete user
+    ;call search_user_id
+    mov rax, 0; for test
+    cmp rax, 504
+    push rax
+    jne .exists 
+    mov rdi, QWORD user_search_error_output
+    call print_string_new
+    call print_nl_new
+    call print_nl_new
+    call print_nl_new
+    jmp manage_user
+.exists:   
+    call delete_user_from_array
     mov rdi, QWORD confirm_user_deletion
     call print_string_new
     call print_nl_new
@@ -811,7 +873,7 @@ search_computer_exists:
     jmp end;
 
 find_main_user:
-    mov rdi, QWORD user_search_welcome
+    mov rdi, QWORD computer_user_search_welcome
     call print_string_new
     call print_nl_new
 find_user_loop:
@@ -828,14 +890,14 @@ find_user_loop:
     call search_computer_id
     cmp rax, 504
     jne find_computer_exists    
-    mov rdi, QWORD user_search_error_output
+    mov rdi, QWORD computer_user_search_error_output
     call print_string_new
     call print_nl_new
     call print_nl_new
     call print_nl_new
     jmp find_user_loop;
 find_computer_exists:
-    mov rdi, QWORD user_search_result_output
+    mov rdi, QWORD computer_user_search_result_output
     push rax
     call print_string_new
     pop rax
