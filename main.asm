@@ -22,29 +22,31 @@ add_user_menu_welcome: db "You can now create a new User",10,"Please enter the S
 ask_for_first_name_input: db "Please enter the First name:",0
 ask_for_department_input: db "Please enter the department fo the user:",0
 ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
-ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",10,"Please enter a differnt USER ID:",0
+ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
 confirm_user_input: db "Thank you. The Following User has been created:",0
  ;delte user textss
 delte_user_menu_welcome: db "You selected: Delte a user",10,"Is this correct? enter yes(y) or no(n)",0
 ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in following format XXXXXXX:",0
-confirm_user_deletion: db "The User with following id has been delteted:",0
+confirm_user_deletion: db "The User has been delteted:",0
 user_search_error_output: db "The User could not be found",0
 
 ;Computer Management Menu texts
 computer_menu_welcome: db 10,"You are in the Computer management menu",10,"Please select one of following options:",10,"1. Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
  ;add computer texts
-add_computer_menu_welcome: db "You can now create a new Computer",10,"Please enter the Computer ID in the Format XXXXXXX:",0
+add_computer_menu_welcome: db "You can now create a new Computer",0
+ask_for_computer_id_input: db "Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
 ask_for_ip_input: db "Please enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
 ask_for_main_user_id_input: db "Please enter the ID of the main user in the following Format XXXXXXX:",0
+ask_for_different_main_user_id: db "Sorry, but this User ID does not exists. ",0
 ask_for_existing_user_id_input: db "I am sorry, but I can not find this USER ID",10,"Please enter an exisiting USER ID:",0
 ask_for_purchase_date_input: db "Please enter the Date of purchase in following Format dd.mm.yyyy:",0
 confirm_computer_input: db "Thank you. The Following computer has been created:",0
  ;delete computer texts
 delte_computer_menu_welcome: db "You selected: Delte a Computer",10,"Is this correct? enter yes(y) or no(n)",0
-ask_for_computer_id_input: db "Please enter the Computer ID you want to deletes in following format XXXXXXX:",0
-confirm_computer_deletion: db "The Computer with following id has been delteted:",0
+ask_for_delete_computer_id_input: db "Please enter the Computer ID you want to deletes in following format XXXXXXX:",0
+confirm_computer_deletion: db "The Computer has been delteted:",0
 
 ;Search Menu texts
 search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
@@ -490,7 +492,7 @@ search_user_id:
     lea rax, [users+R10+256]
     mov R14, [rbp-8]
     inc QWORD[rbp-8]
-    cmp R13, [rax]
+    cmp R13D, [rax]
     jne .loop
     mov rax, R14;return index in rax
     pop rbp
@@ -785,14 +787,23 @@ add_user:
     call read_string_new
     mov rbx, rax
     call add_user_department
+.ask_for_id:
     mov rdi, QWORD ask_for_user_id_input
     call print_string_new
     call print_nl_new
-    call read_int_new
+    call read_uint_new
     mov rbx, rax
-    ; check if ID below 9999999
-    ; check if ID free before writing
+    
+    cmp rbx, 9999999
+    jge .ask_for_id
+    
+    mov R13, rbx
+    call search_user_id
+    cmp rax, 504
+    jne .id_exists 
+        
     call add_user_id
+
     mov rdi, QWORD ask_for_emai_input
     call print_string_new
     call print_nl_new
@@ -810,21 +821,24 @@ add_user:
     call print_nl_new    
     inc QWORD[user_index]
     ret
+.id_exists:
+    mov rdi, QWORD ask_for_differnt_user_id_input
+    call print_string_new
+    call print_nl_new
+    jmp .ask_for_id
     
     
 delete_user:
     mov rdi, QWORD delte_user_menu_welcome
     call print_string_new
     call print_nl_new
-    call yes_or_no
-    jne .end
     mov rdi, QWORD ask_for_user_id_delete_input
     call print_string_new
     call print_nl_new
-    call read_uint_new ;WHY THE HECK DOES THIS NOT WORK????
-    ;process user ID, check user id and delete user
+    call read_uint_new 
+    mov rdi, rax
+    mov R13, rax
     call search_user_id
-    mov rax, 0; for test
     cmp rax, 504
     push rax
     jne .exists 
@@ -833,7 +847,7 @@ delete_user:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp end
+    jmp .end
 .exists:   
     call delete_user_from_array
     mov rdi, QWORD confirm_user_deletion
@@ -841,7 +855,7 @@ delete_user:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp end
+    jmp .end
 .end:
     ret    
 
@@ -851,24 +865,39 @@ add_computer:
     mov rdi, QWORD add_computer_menu_welcome
     call print_string_new
     call print_nl_new
-    call read_int_new
-    mov rbx, rax
-    ; check if ID below 9999999
-    ;check if ID free
+.ask_for_id:
+    mov rdi, QWORD ask_for_computer_id_input
+    call print_string_new
+    call print_nl_new    
+    call read_uint_new
+    mov rbx, rax    
+    cmp rbx, 9999999
+    jge .ask_for_id    
+    mov R13, rbx
+    call search_computer_id
+    cmp rax, 504
+    jne .id_exists 
     call add_computer_id
+    
     mov rdi, QWORD ask_for_ip_input
     call print_string_new
     call print_nl_new
     call read_string_new
     mov rbx, rax
     call add_computer_ip
+.ask_for_user_id:    
     mov rdi, QWORD ask_for_main_user_id_input
     call print_string_new
     call print_nl_new
-    call read_int_new
-    mov rbx, rax
-    ; check if ID below 9999999
-    ; check if ID exists
+    call read_uint_new
+    mov rbx, rax   
+    cmp rbx, 9999999
+    jge .ask_for_user_id   
+    mov R13, rbx
+    call search_user_id
+    cmp rax, 504
+    je .user_id_not_exists 
+    
     call add_computer_main_user_id
     mov rdi, QWORD ask_for_purchase_date_input
     call print_string_new
@@ -887,20 +916,28 @@ add_computer:
     jmp .end
 .end:
     ret
+.id_exists:
+    mov rdi, QWORD ask_for_differn_computer_id_input
+    call print_string_new
+    call print_nl_new
+    jmp .ask_for_id
+.user_id_not_exists:
+    mov rdi, QWORD ask_for_different_main_user_id
+    call print_string_new
+    call print_nl_new
+    jmp .ask_for_user_id
 
 delete_computer:
     mov rdi, QWORD delte_computer_menu_welcome
     call print_string_new
     call print_nl_new
-    call yes_or_no
-    jne .end
+
     mov rdi, QWORD ask_for_computer_id_input
     call print_string_new
     call print_nl_new
-    call read_uint_new ;DOES NOT READ
-    ; process computer ID, check computer id and delete computer
+    call read_uint_new 
+    mov R13, rax
     call search_computer_id
-    mov rax, 0; for test
     cmp rax, 504
     push rax
     jne .cp_exists 
@@ -909,7 +946,7 @@ delete_computer:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp .end
+    jmp .end ;;Segmentation fault (core dumped)
 .cp_exists:   
     pop rax 
     call delete_computer_from_array
@@ -961,7 +998,7 @@ search_computer:
 
 find_main_user:
     mov rdi, QWORD computer_user_search_welcome
-    call print_string_news
+    call print_string_new
     call print_nl_new
 .loop:
     mov rdi, QWORD ask_for_user_search_id_input
@@ -1006,15 +1043,4 @@ find_main_user:
     call print_nl_new
     jmp .loop
 .end:
-    ret
-    
-    
-yes_or_no:
-    call read_char_new
-    cmp rax, 121
-    ret
-    
-end:
-    add rsp, 32
-    pop rbp
     ret
