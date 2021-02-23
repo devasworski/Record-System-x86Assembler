@@ -6,7 +6,7 @@ section .data
 
 ;Main Menu texts
 hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,0
-main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage User account",10,"2. Manage Computers",10,"3. Search for Computer",10,"4. Search for email of Main User by Computer",10,10,"Enter the number of the menu you want to enter:",10,0
+main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage Users",10,"2. Manage Computers",10,"3. Search",10,"4. EXIT",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;error messages
 inputerror: db "I am sorry, but I couldn't understand your input",10,"Please try again:",10,0
@@ -45,6 +45,9 @@ confirm_computer_input: db "Thank you. The Following computer has been created:"
 delte_computer_menu_welcome: db "You selected: Delte a Computer",10,"Is this correct? enter yes(y) or no(n)",0
 ask_for_computer_id_input: db "Please enter the Computer ID you want to deletes in following format XXXXXXX:",0
 confirm_computer_deletion: db "The Computer with following id has been delteted:",0
+
+;Search Menu texts
+search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;Computer Search Menu texts
 computer_search_welcome: db 10,"You are in the Computer Search menu",0
@@ -617,53 +620,151 @@ main:
     mov rdi, QWORD hello1
     call print_string_new
     call print_nl_new
+    call main_menu
+    pop rbp
+    add rsp, 32
+    ret
     
-main_menu:    	
+main_menu:   
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 	
+    
+.read:    
     mov rdi, QWORD main_optionselect
     call print_string_new
     call print_nl_new
-    
     call read_int_new
-    call read_main_menu_input
-    
-read_main_menu_input:
     cmp rax, 1
-    je manage_user
+    je .user_menu
     cmp rax, 2
-    je manage_computer
+    je .computer_menu
     cmp rax, 3
-    je search_computer
+    je .search_menu
     cmp rax, 4
-    je find_main_user
+    je .end
     mov rdi, QWORD inputerror
     call print_string_new
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp main_menu
+    jmp .read
+.user_menu:
+    call user_menu
+    jmp .read
+.computer_menu:
+    call computer_menu
+    jmp .read
+.search_menu:
+    call search_menu
+    jmp .read
+.end:
+    pop rbp
+    add rsp, 32
+    ret
     
-manage_user:
+user_menu:   
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 	    
+.selection:    
     mov rdi, QWORD user_menu_welcome
     call print_string_new
-    call print_nl_new    
+    call print_nl_new
     call read_int_new
-    jmp read_manage_user_menu_input    
-    
-read_manage_user_menu_input:
     cmp rax, 1
-    je add_user
+    je .add_user
     cmp rax, 2
-    je delete_user
+    je .delete_user
     cmp rax, 3
-    je main_menu
+    je .end
     mov rdi, QWORD inputerror
     call print_string_new
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp manage_user
+    jmp .selection
+.add_user:
+    call add_user
+    jmp .selection
+.delete_user:
+    call delete_user
+    jmp .selection
+.end:
+    pop rbp
+    add rsp, 32
+    ret
     
+computer_menu:   
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 	    
+.selection:    
+    mov rdi, QWORD computer_menu_welcome
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    cmp rax, 1
+    je .add_computer
+    cmp rax, 2
+    je .delete_computer
+    cmp rax, 3
+    je .end
+    mov rdi, QWORD inputerror
+    call print_string_new
+    call print_nl_new
+    call print_nl_new
+    call print_nl_new
+    jmp .selection
+.add_computer:
+    call add_computer
+    jmp .selection
+.delete_computer:
+    call delete_computer
+    jmp .selection
+.end:
+    pop rbp
+    add rsp, 32
+    ret
     
+search_menu:   
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 	    
+.selection:    
+    mov rdi, QWORD search_menu_welcome
+    call print_string_new
+    call print_nl_new
+    call read_int_new
+    cmp rax, 1
+    je .search_computer
+    cmp rax, 2
+    je .search_user
+    cmp rax, 3
+    je .search_main_user
+    cmp rax, 4
+    je .end
+    mov rdi, QWORD inputerror
+    call print_string_new
+    call print_nl_new
+    call print_nl_new
+    call print_nl_new
+    jmp .selection
+.search_computer:
+    call search_computer
+    jmp .selection
+.search_user:
+    ;NOT IMPLEMENTED
+    jmp .selection
+.search_main_user:
+    call find_main_user
+    jmp .selection
+.end:
+    pop rbp
+    add rsp, 32
+    ret
+    
+ 
 add_user:
     ; check user_index below 499, otherwise give error storage full
     mov rdi, QWORD add_user_menu_welcome
@@ -708,7 +809,7 @@ add_user:
     call print_nl_new
     call print_nl_new    
     inc QWORD[user_index]
-    jmp manage_user
+    ret
     
     
 delete_user:
@@ -716,7 +817,7 @@ delete_user:
     call print_string_new
     call print_nl_new
     call yes_or_no
-    jne manage_user
+    jne .end
     mov rdi, QWORD ask_for_user_id_delete_input
     call print_string_new
     call print_nl_new
@@ -732,7 +833,7 @@ delete_user:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp manage_user
+    jmp end
 .exists:   
     call delete_user_from_array
     mov rdi, QWORD confirm_user_deletion
@@ -740,31 +841,11 @@ delete_user:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp manage_user
-    
+    jmp end
+.end:
+    ret    
 
-manage_computer:
-    mov rdi, QWORD computer_menu_welcome
-    call print_string_new
-    call print_nl_new
-    
-    call read_int_new
-    jmp read_manage_computer_menu_input
 
-    
-read_manage_computer_menu_input:
-    cmp rax, 1
-    je add_computer
-    cmp rax, 2
-    je delete_computer
-    cmp rax, 3
-    je main_menu
-    mov rdi, QWORD inputerror
-    call print_string_new
-    call print_nl_new
-    call print_nl_new
-    call print_nl_new
-    jmp manage_user
 
 add_computer:
     mov rdi, QWORD add_computer_menu_welcome
@@ -803,14 +884,16 @@ add_computer:
     call print_nl_new
     call print_nl_new
     inc QWORD[computer_index]
-    jmp manage_computer
+    jmp .end
+.end:
+    ret
 
 delete_computer:
     mov rdi, QWORD delte_computer_menu_welcome
     call print_string_new
     call print_nl_new
     call yes_or_no
-    jne manage_computer
+    jne .end
     mov rdi, QWORD ask_for_computer_id_input
     call print_string_new
     call print_nl_new
@@ -826,7 +909,7 @@ delete_computer:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp manage_computer
+    jmp .end
 .cp_exists:   
     pop rax 
     call delete_computer_from_array
@@ -835,7 +918,9 @@ delete_computer:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp manage_computer
+    jmp .end
+.end:
+    ret
         
                 
 search_computer:
@@ -849,7 +934,7 @@ search_computer:
     call read_string_new
     mov bl, BYTE[rax] 
     cmp bl, 120
-    je main_menu
+    je .end
     mov rdi, rax
     call atoi
     mov R13, rax
@@ -870,11 +955,13 @@ search_computer:
     pop rax
     call print_computer
     jmp .loop
+.end:
+    ret
 
 
 find_main_user:
     mov rdi, QWORD computer_user_search_welcome
-    call print_string_new
+    call print_string_news
     call print_nl_new
 .loop:
     mov rdi, QWORD ask_for_user_search_id_input
@@ -883,7 +970,7 @@ find_main_user:
     call read_string_new
     mov bl, BYTE[rax] 
     cmp bl, 120
-    je main_menu
+    je .end
     mov rdi, rax
     call atoi
     mov R13, rax
@@ -918,6 +1005,8 @@ find_main_user:
     call print_nl_new
     call print_nl_new
     jmp .loop
+.end:
+    ret
     
     
 yes_or_no:
