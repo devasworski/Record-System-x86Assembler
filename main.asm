@@ -222,19 +222,19 @@ add_computer_ip: ;read from rbx
     mul R11
     mov R10, rax
     lea rax, [computers+R10+4]
-    add_computer_ip_loop1: ;read from rbx
+.add_computer_ip_loop1: ;read from rbx
     mov R14,  0
     mov dl, BYTE[rbx]
-    add_computer_ip_loop2:
+.add_computer_ip_loop2:
     mov [rsp+R14], dl
     inc rbx
     inc R14
     mov dl, BYTE[rbx]
     cmp dl, 0
-    je process_read_ip_part
+    je .process_read_ip_part
     cmp dl, 46
-    jne add_computer_ip_loop2
-process_read_ip_part:
+    jne .add_computer_ip_loop2
+.process_read_ip_part:
     mov BYTE [rsp+R14], BYTE 0
     mov R15, rax
     mov rdi, rsp
@@ -246,10 +246,10 @@ process_read_ip_part:
     mov R12B, R13B
     mov [rax], R12
     cmp dl, 0
-    je add_computer_ip_end
+    je .add_computer_ip_end
     inc rbx
-    jmp add_computer_ip_loop1
-add_computer_ip_end:
+    jmp .add_computer_ip_loop1
+.add_computer_ip_end:
 
     pop rbp
     add rsp, 32
@@ -300,7 +300,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12B, R13B
     mov [rax], R12
     
-     mov R14, 0
+    mov R14, 0
     mov dl, BYTE[rbx];m
     mov [rsp+R14], dl
     inc rbx
@@ -445,10 +445,10 @@ search_computer_id:
     sub rsp, 32 
     mov QWORD[rbp-8], 0
     
-search_computer_id_loop: ; search id in R13
+.loop: ; search id in R13
     mov rdx, QWORD[computer_index]
     cmp [rbp-8], rdx
-    je computer_search_failed
+    je .failed
     mov rax, [rbp-8]
     mov R11, 16
     mul R11
@@ -457,12 +457,12 @@ search_computer_id_loop: ; search id in R13
     mov R14, [rbp-8]
     inc QWORD[rbp-8]
     cmp R13D, [rax]
-    jne search_computer_id_loop
+    jne .loop
     mov rax, R14;return index in rax
     pop rbp
     add rsp, 32
     ret
-computer_search_failed:
+.failed:
     mov rax, 504 ;return error 504 in rax
     pop rbp
     add rsp, 32
@@ -476,10 +476,10 @@ search_user_id:
     sub rsp, 32 
     mov QWORD[rbp-8], 0
     
-search_user_id_loop: ; search id in R13
+.loop: ; search id in R13
     mov rdx, QWORD[user_index]
     cmp [rbp-8], rdx
-    je user_search_failed
+    je .failed
     mov rax, [rbp-8]
     mov R11, 260
     mul R11
@@ -488,12 +488,12 @@ search_user_id_loop: ; search id in R13
     mov R14, [rbp-8]
     inc QWORD[rbp-8]
     cmp R13, [rax]
-    jne search_user_id_loop
+    jne .loop
     mov rax, R14;return index in rax
     pop rbp
     add rsp, 32
     ret
-user_search_failed:
+.failed:
     mov rax, 504 ;return error 504 in rax
     pop rbp
     add rsp, 32
@@ -505,13 +505,13 @@ add_user_name:
     mul R11
     mov R10, rax
     lea rax, [users+R10]
-add_user_name_loop: ;read from rbx
+.loop: ;read from rbx
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
     cmp dl, 0
-    jne add_user_name_loop
+    jne .loop
     ret
 
 add_user_firstname:
@@ -520,13 +520,13 @@ add_user_firstname:
     mul R11
     mov R10, rax
     lea rax, [users+R10+64]
-add_user_firstname_loop: ;read from rbx
+.loop: ;read from rbx
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
     cmp dl, 0
-    jne add_user_firstname_loop
+    jne .loop
     ret
     
 add_user_department:
@@ -535,13 +535,13 @@ add_user_department:
     mul R11
     mov R10, rax
     lea rax, [users+R10+128]
-add_user_department_loop: ;read from rbx
+.loop: ;read from rbx
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
     cmp dl, 0
-    jne add_user_department_loop
+    jne .loop
     ret
     
 add_user_email:
@@ -550,13 +550,13 @@ add_user_email:
     mul R11
     mov R10, rax
     lea rax, [users+R10+192]
-add_user_email_loop: ;read from rbx
+.loop: ;read from rbx
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
     cmp dl, 0
-    jne add_user_email_loop
+    jne .loop
     ret
 
 add_user_id:
@@ -772,6 +772,7 @@ add_computer:
     call print_nl_new
     call read_int_new
     mov rbx, rax
+    ; check if ID below 9999999
     ;check if ID free
     call add_computer_id
     mov rdi, QWORD ask_for_ip_input
@@ -785,6 +786,7 @@ add_computer:
     call print_nl_new
     call read_int_new
     mov rbx, rax
+    ; check if ID below 9999999
     ; check if ID exists
     call add_computer_main_user_id
     mov rdi, QWORD ask_for_purchase_date_input
@@ -840,63 +842,61 @@ search_computer:
     mov rdi, QWORD computer_search_welcome
     call print_string_new
     call print_nl_new
-search_computer_loop:
+.loop:
     mov rdi, QWORD ask_for_computer_search_id_input
     call print_string_new
     call print_nl_new
     call read_string_new
     mov bl, BYTE[rax] 
     cmp bl, 120
-    je manage_computer
+    je main_menu
     mov rdi, rax
     call atoi
     mov R13, rax
     call search_computer_id
     cmp rax, 504
-    jne search_computer_exists    
+    jne .exists    
     mov rdi, QWORD computer_search_error_output
     call print_string_new
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp search_computer_loop
-search_computer_exists:
+    jmp .loop
+.exists:
     mov rdi, QWORD computer_search_result_output
     push rax
     call print_string_new
     call print_nl_new
     pop rax
     call print_computer
-    jmp search_computer_loop
-    
-    
-    jmp end;
+    jmp .loop
+
 
 find_main_user:
     mov rdi, QWORD computer_user_search_welcome
     call print_string_new
     call print_nl_new
-find_user_loop:
+.loop:
     mov rdi, QWORD ask_for_user_search_id_input
     call print_string_new
     call print_nl_new
     call read_string_new
     mov bl, BYTE[rax] 
     cmp bl, 120
-    je manage_computer
+    je main_menu
     mov rdi, rax
     call atoi
     mov R13, rax
     call search_computer_id
     cmp rax, 504
-    jne find_computer_exists    
+    jne .exists    
     mov rdi, QWORD computer_user_search_error_output
     call print_string_new
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp find_user_loop;
-find_computer_exists:
+    jmp .loop;
+.exists:
     mov rdi, QWORD computer_user_search_result_output
     push rax
     call print_string_new
@@ -917,7 +917,7 @@ find_computer_exists:
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp find_user_loop;
+    jmp .loop
     
     
 yes_or_no:
