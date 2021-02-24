@@ -13,13 +13,14 @@ inputerror: db "I am sorry, but I couldn't understand your input",10,"Please try
 
 ;generic messages
 divider: db 10,"--------------------------------------------------------------------",10,0
+error: db "error",0
 
 ;User Management Menu texts
 user_menu_welcome: db 10,"You are in the User account management menu",10,"Please select on of the following options:",10,10,"1. Add a User",10,"2. Delete a User",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
  ;add user texts
 add_user_menu_welcome: db 10,"You can now create a new User",10,"Please enter the Surname:",0
 ask_for_first_name_input: db "Please enter the First name:",0
-ask_for_department_input: db "Please enter the department fo the user:",0
+ask_for_department_input: db "Please choose the department:",10,"1. IT Support",10,"2. Development",10,"3. Finance",10,"4. HR",10,10,"Enter the number of the department you want to choose:",10,0
 ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
 ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
@@ -40,8 +41,10 @@ ask_for_computer_id_input: db "Please enter the Computer ID in the Format XXXXXX
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
 ask_for_ip_input: db "Please enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
 ask_for_main_user_id_input: db "Please enter the ID of the main user in the following Format XXXXXXX:",0
+ask_for_os_input: db "Please choose the OS:",10,"1. Windows",10,"2. Linux",10,"3. MacOS",10,"Enter the number of the OS you want to choose:",0
 ask_for_different_main_user_id: db "Sorry, but this User ID does not exists. ",0
 ask_for_existing_user_id_input: db "I am sorry, but I can not find this USER ID",10,"Please enter an exisiting USER ID:",0
+exit_yes_no: db "Do you want to go back to the main menu? (y/n)",0
 ask_for_purchase_date_input: db "Please enter the Date of purchase in following Format dd.mm.yyyy:",0
 confirm_computer_input: db "Thank you. The Following computer has been created:",10,0
  ;delete computer texts
@@ -81,6 +84,7 @@ user_id: db "User ID: p",0
 computer_id: db "Computer ID: c",0
 purchase_date: db "Purchase Date: ",0
 computer_ip: db "IP Adress: ",0
+computer_os: db "OS: ",0
 
 
 
@@ -88,6 +92,14 @@ computer_ip: db "IP Adress: ",0
 user_file_location: db "users.cvs",0
 computer_file_location: db "computers.cvs",0
 
+;enums
+development: db"Development",0
+finance: db "Finance",0
+it_support: db "IT Support",0
+HR: db "HR",0
+win: db "Windows",0
+lin: db "Linux",0
+mac: db "MacOS",0
 
 
 ;index
@@ -96,7 +108,7 @@ computer_index: dq 0
 
 ;arrays
 users: times 26000 db 0
-computers: times 2000 dd 0
+computers: times 8500 db 0
 
 ;users: (4*64 + 4)*100 = 26000 byte
 ;computers: (4)*500 = 2000 doublewords
@@ -113,8 +125,70 @@ computers: times 2000 dd 0
 ; string64, string64, string64, string64, INT32
 ; struct User
 
+;ComputerID, IP, UserID, Date, OS
+; INT32, INT32, INT32, INT32, INT8
+; 4+4+4+4+1 = 17byte
+; 17*500 = 8500byte
+; 0, 4, 8, 12, 16
+
+;SurName, Name, Department, email, UserID
+; String65, String65, INT8, String65, INT32
+; 65+65+8+65+32 = 235 byte
+; 235*100 = 23500 byte
+; 0, 65, 130, 138, 203
 
 section .text
+
+print_os:; index in rdx
+    cmp rdx, 1
+    je .w
+    cmp rdx, 2
+    je .l
+    cmp rdx, 3
+    je .m
+    mov rdi, QWORD error
+    jmp .end
+.w:
+    mov rdi, QWORD win
+    jmp .end
+.l:
+    mov rdi, QWORD lin
+    jmp .end
+.m:
+    mov rdi, QWORD mac
+    jmp .end
+
+.end:
+    call print_string_new
+    ret
+
+print_department:; index in rdx
+    cmp rdx, 1
+    je .it
+    cmp rdx, 2
+    je .dev
+    cmp rdx, 3
+    je .fin
+    cmp rdx, 4
+    je .hr
+    mov rdi, QWORD error
+    jmp .end
+.it:
+    mov rdi, QWORD it_support
+    jmp .end
+.dev:
+    mov rdi, QWORD development
+    jmp .end
+.fin:
+    mov rdi, QWORD finance
+    jmp .end
+.hr:
+    mov rdi, QWORD HR
+    jmp .end
+.end:
+    call print_string_new
+    ret
+
 
 delete_user_from_array: ; index in rax
 
@@ -135,7 +209,7 @@ delete_user_from_array: ; index in rax
     lea R15, [users+R10]
     
     mov rax, QWORD [rsp+8]
-    mov R11, 16
+    mov R11, 260
     mul R11
     mov R10, rax
     lea rcx, [users+R10]
@@ -193,13 +267,13 @@ delete_computer_from_array: ; index in rax
 .loop1:
     mov QWORD [rsp+24], 0;counter
     mov rax, QWORD [rsp+16]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea R15, [computers+R10]
     
     mov rax, QWORD [rsp+8]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rcx, [computers+R10]
@@ -225,7 +299,7 @@ delete_computer_from_array: ; index in rax
 .end:
     mov QWORD [rsp+24], 0;counter
     mov rax, QWORD [rsp+16]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rdx, [computers+R10]
@@ -245,7 +319,7 @@ delete_computer_from_array: ; index in rax
 
 add_computer_id: ;read from rbx
     mov rax, QWORD[computer_index]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rax, [computers+R10]
@@ -261,7 +335,7 @@ add_computer_ip: ;read from rbx
 .restart: 
     mov QWORD[rbp-8], 0
     mov rax, QWORD[computer_index]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rax, [computers+R10+4]
@@ -316,12 +390,22 @@ add_computer_ip: ;read from rbx
     
 add_computer_main_user_id: ;read from rbx
     mov rax, QWORD[computer_index]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rax, [computers+R10+8]
     mov edx, DWORD ebx
     mov [rax], edx
+    ret
+    
+add_computer_os: ;read from rbx
+    mov rax, QWORD[computer_index]
+    mov R11, 17
+    mul R11
+    mov R10, rax
+    lea rax, [computers+R10+16]
+    mov dl, BYTE bl
+    mov [rax], dl
     ret
     
     
@@ -332,7 +416,7 @@ add_computer_purchase_date: ;read from rbx
 
 .restart:        
     mov rax, QWORD[computer_index]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea R15, [computers+R10+12]
@@ -361,7 +445,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12, [R15]
     shl R12, 8
     mov R12B, R13B
-    mov [R15], R12
+    mov [R15], R12B
     
     inc rbx
     
@@ -389,7 +473,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12, [R15]
     shl R12, 8
     mov R12B, R13B
-    mov [R15], R12
+    mov [R15], R12B
     
     inc rbx
     
@@ -417,7 +501,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12, [R15]
     shl R12, 16
     mov R12W, R13W
-    mov [R15], R12
+    mov [R15], R12W
 .end:    
     pop rbp
     add rsp, 32
@@ -431,7 +515,7 @@ add_computer_purchase_date: ;read from rbx
     jmp .restart
     
 print_computer: ; index in rax
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     
@@ -440,6 +524,13 @@ print_computer: ; index in rax
     lea R12D, [computers+R10]
     mov edi, [R12]
     call print_uint_new 
+    call print_nl_new
+    
+    mov rdi, QWORD computer_os
+    call print_string_new
+    lea R12D, [computers+R10+16]
+    mov dl, BYTE [R12]
+    call print_os 
     call print_nl_new
     
     mov rdi, QWORD computer_ip
@@ -523,7 +614,7 @@ search_computer_id:
     cmp [rbp-8], rdx
     je .failed
     mov rax, [rbp-8]
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rax, [computers+R10]
@@ -696,7 +787,8 @@ print_user: ;index in rax
     mov rdi, QWORD user_id
     call print_string_new
     lea R12, [users+R10+256]
-    mov rdi, [R12]
+    xor rdi, rdi
+    mov edi, [R12D]
     call print_uint_new ; make it appear in the format XXXXXXX
     
     call print_nl_new
@@ -985,6 +1077,17 @@ add_computer:
     cmp rax, 504
     jne .id_exists 
     call add_computer_id
+.ask_for_os:    
+    mov rdi, QWORD ask_for_os_input
+    call print_string_new
+    call print_nl_new
+    call read_uint_new
+    cmp rax, 3
+    jg .oserror
+    cmp rax, 1
+    jl .oserror
+    mov rbx, rax
+    call add_computer_os
     
     mov rdi, QWORD ask_for_ip_input
     call print_string_new
@@ -1032,12 +1135,26 @@ add_computer:
     mov rdi, QWORD ask_for_different_main_user_id
     call print_string_new
     call print_nl_new
+    
+    mov rdi, QWORD exit_yes_no
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov bl, BYTE[rax] 
+    cmp bl, 121
+    je .end
+    
     jmp .ask_for_user_id
 .storage_full:
     mov rdi, QWORD computer_storage_full
     call print_string_new
     call print_nl_new
     ret
+.oserror:
+    mov rdi, QWORD inputerror
+    call print_string_new
+    call print_nl_new
+    jmp .ask_for_os
 
 delete_computer:
     mov rdi, QWORD delte_computer_menu_welcome
