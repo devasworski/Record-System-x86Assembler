@@ -55,7 +55,7 @@ confirm_computer_deletion: db "The Computer has been delteted",0
 computer_storage_full: db 10,"The computer storage is full. You can not add any new computers. Please free some space, by deleting old computers in order to add new computers",0
 
 ;Search Menu texts
-search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
+search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Print all Users",10,"5. Print all Computers",10,"6. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;Computer Search Menu texts
 computer_search_welcome: db 10,"You are in the Computer Search menu",0
@@ -73,6 +73,10 @@ user_search_result_output: db "Following User has been found:",0
 computer_user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
 computer_user_search_result_output: db "This is the email of the mail user: ",0
 computer_user_search_error_output: db "The computer could not be found",0
+
+;Print texts
+print_all_user_welcome: db "Printing all Users",0
+print_all_computer_welcome: db "Printing all Comuters",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
@@ -928,6 +932,10 @@ search_menu:
     cmp rax, 3
     je .search_main_user
     cmp rax, 4
+    je .print_all_user
+    cmp rax, 5
+    je .print_all_computer
+    cmp rax, 6
     je .end
     mov rdi, QWORD inputerror
     call print_string_new
@@ -943,6 +951,12 @@ search_menu:
 .search_main_user:
     call find_main_user
     jmp .selection
+.print_all_user:
+    call print_all_user
+    jmp .selection
+.print_all_computer:
+    call print_all_computer
+    jmp .selection 
 .end:
     mov rdi, QWORD divider
     call print_string_new
@@ -1299,4 +1313,65 @@ find_main_user:
     call print_nl_new
     jmp .loop
 .end:
+    ret
+    
+print_all_user:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32
+    mov rdi, QWORD divider
+    call print_string_new
+    mov rdi, QWORD print_all_user_welcome
+    call print_string_new
+    mov rdi, QWORD divider
+    call print_string_new
+    call print_nl_new
+    mov QWORD [rbp-8], 0
+    mov rdx, QWORD [user_index]
+    cmp [rbp-8],rdx
+    jge .end 
+.loop:
+    mov rax, QWORD [rbp-8]
+    call print_user
+    mov rdx, QWORD [user_index]
+    inc QWORD [rbp-8]
+    call print_nl_new
+    cmp [rbp-8],rdx
+    jl .loop
+.end:
+    mov rdi, QWORD divider
+    call print_string_new
+    pop rbp
+    add rsp, 32
+    ret
+
+
+print_all_computer:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32
+    mov rdi, QWORD divider
+    call print_string_new
+    mov rdi, QWORD print_all_computer_welcome
+    call print_string_new
+    mov rdi, QWORD divider
+    call print_string_new
+    call print_nl_new
+    mov QWORD [rbp-8], 0
+    mov rdx, QWORD [computer_index]
+    cmp [rbp-8],rdx
+    jge .end 
+.loop:
+    mov rax, QWORD [rbp-8]
+    call print_computer
+    mov rdx, QWORD [computer_index]
+    inc QWORD [rbp-8]
+    call print_nl_new
+    cmp [rbp-8],rdx
+    jl .loop
+.end:
+    mov rdi, QWORD divider
+    call print_string_new
+    pop rbp
+    add rsp, 32
     ret
