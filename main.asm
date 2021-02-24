@@ -101,10 +101,6 @@ months: db 31,28,31,30,31,30,31,31,30,31,30,31
 leapmonths: db 31,29,31,30,31,30,31,31,30,31,30,31
 currentdate: times 4 db 0 
 
-;File locations
-user_file_location: db "users",0
-computer_file_location: db "computers",0
-
 ;enums
 development: db"Development",0
 finance: db "Finance",0
@@ -123,28 +119,6 @@ computer_index: dq 0
 ;arrays
 users: times 20000 db 0
 computers: times 8500 db 0
-
-section .bss
-
-;File descriptors
-user_file_descriptor: resq 1
-computer_file_descriptor: resq 1
-
-
-;users: (4*64 + 4)*100 = 26000 byte
-;computers: (4)*500 = 2000 doublewords
-
-;Name, FirstName, Department, User ID, email
-;string64, string64, string64, INT32, string64
-;Computer ID, IP part1, IP part2, IP part3, IP part4, User ID, purchase day, purchase month, purchase year
-; INT32, INT8, INT8, INT8, INT8, INT32, INT8, INT8, INT16
-
-;Computer ID, IP, USER ID, Date Purchases
-; INT32, INT32, INT32, INT32
-; INT32[4]
-;LastName, FirstName, Department, email, USER ID
-; string64, string64, string64, string64, INT32
-; struct User
 
 ;ComputerID, IP, UserID, Date, OS
 ; INT32, INT32, INT32, INT32, INT8
@@ -834,9 +808,18 @@ add_user_name:
     inc rcx
     cmp dl, 0
     jne .loop
+    cmp rcx, 1
+    jle .toshort
     ret
 .tolong:
     mov rdi, QWORD only_64_allowed
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp add_user_name
+.toshort:
+    mov rdi, QWORD inputerror
     call print_string_new
     call print_nl_new
     call read_string_new
@@ -860,9 +843,18 @@ add_user_firstname:
     inc rcx
     cmp dl, 0
     jne .loop
+    cmp rcx, 1
+    jle .toshort
     ret
 .tolong:
     mov rdi, QWORD only_64_allowed
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp add_user_firstname
+.toshort:
+    mov rdi, QWORD inputerror
     call print_string_new
     call print_nl_new
     call read_string_new
@@ -900,9 +892,18 @@ add_user_email:
     inc rcx
     cmp dl, 0
     jne .loop
+    cmp rcx, 1
+    jle .toshort
     jmp .check_email_unique
 .tolong:
     mov rdi, QWORD only_64_allowed
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp .restart
+.toshort:
+    mov rdi, QWORD inputerror
     call print_string_new
     call print_nl_new
     call read_string_new
