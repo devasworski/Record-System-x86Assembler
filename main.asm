@@ -20,7 +20,7 @@ user_menu_welcome: db 10,"You are in the User account management menu",10,"Pleas
  ;add user texts
 add_user_menu_welcome: db 10,"You can now create a new User",10,"Please enter the Surname:",0
 ask_for_first_name_input: db "Please enter the First name:",0
-ask_for_department_input: db "Please choose the department:",10,"1. IT Support",10,"2. Development",10,"3. Finance",10,"4. HR",10,10,"Enter the number of the department you want to choose:",10,0
+ask_for_department_input: db "Please choose the department:",10,"1. IT Support",10,"2. Development",10,"3. Finance",10,"4. HR",10,"Enter the number of the department you want to choose:",10,0
 ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
 ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
@@ -107,7 +107,7 @@ user_index: dq 0
 computer_index: dq 0
 
 ;arrays
-users: times 26000 db 0
+users: times 20000 db 0
 computers: times 8500 db 0
 
 ;users: (4*64 + 4)*100 = 26000 byte
@@ -133,9 +133,9 @@ computers: times 8500 db 0
 
 ;SurName, Name, Department, email, UserID
 ; String65, String65, INT8, String65, INT32
-; 65+65+8+65+32 = 235 byte
-; 235*100 = 23500 byte
-; 0, 65, 130, 138, 203
+; 65+65+1+65+4 = 200 byte
+; 200*100 = 20000 byte
+; 0, 65, 130, 131, 196
 
 section .text
 
@@ -203,13 +203,13 @@ delete_user_from_array: ; index in rax
 .loop1:
     mov QWORD [rsp+24], 0;counter
     mov rax, QWORD [rsp+16]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
     lea R15, [users+R10]
     
     mov rax, QWORD [rsp+8]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
     lea rcx, [users+R10]
@@ -222,7 +222,7 @@ delete_user_from_array: ; index in rax
     inc QWORD [rsp+24]
     inc rdx
     inc rcx
-    cmp QWORD [rsp+24], 260
+    cmp QWORD [rsp+24], 200
     jne .loop2
     
     mov R14, QWORD[user_index]
@@ -235,7 +235,7 @@ delete_user_from_array: ; index in rax
 .end:
     mov QWORD [rsp+24], 0
     mov rax, QWORD [rsp+16]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
     lea rdx, [users+R10]
@@ -245,7 +245,7 @@ delete_user_from_array: ; index in rax
     mov BYTE[rdx], R12B
     inc QWORD [rsp+24]
     inc rcx
-    cmp QWORD [rsp+24], 260
+    cmp QWORD [rsp+24], 200
     jne .endloop
     
     dec QWORD[computer_index]
@@ -645,10 +645,10 @@ search_user_id:
     cmp [rbp-8], rdx
     je .failed
     mov rax, [rbp-8]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
-    lea rax, [users+R10+256]
+    lea rax, [users+R10+196]
     mov R14, [rbp-8]
     inc QWORD[rbp-8]
     cmp R13D, [rax]
@@ -665,13 +665,13 @@ search_user_id:
 
 add_user_name:
     mov rax, QWORD[user_index]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
     lea rax, [users+R10]
     mov rcx, 0
 .loop: ;read from rbx
-    cmp rcx, 63
+    cmp rcx, 64
     je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
@@ -686,13 +686,13 @@ add_user_name:
 
 add_user_firstname:
     mov rax, QWORD[user_index]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
-    lea rax, [users+R10+64]
+    lea rax, [users+R10+65]
     mov rcx, 0
 .loop: ;read from rbx
-    cmp rcx, 63
+    cmp rcx, 64
     je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
@@ -705,36 +705,25 @@ add_user_firstname:
     mov [rax], BYTE 0
     ret
     
-add_user_department: ;MAX 63 char
+add_user_department:
     mov rax, QWORD[user_index]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
-    lea rax, [users+R10+128]
-    mov rcx, 0
-.loop: ;read from rbx
-    cmp rcx, 63
-    je .end
-    mov dl, BYTE[rbx]
+    lea rax, [users+R10+130]
+    mov dl, BYTE bl
     mov [rax], dl
-    inc rbx
-    inc rax
-    inc rcx
-    cmp dl, 0
-    jne .loop
-.end:
-    mov [rax], BYTE 0
     ret
     
-add_user_email: ;MAX 63 char
+add_user_email:
     mov rax, QWORD[user_index]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
-    lea rax, [users+R10+192]
+    lea rax, [users+R10+131]
     mov rcx, 0
 .loop: ;read from rbx
-    cmp rcx, 63
+    cmp rcx, 64
     je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
@@ -749,17 +738,17 @@ add_user_email: ;MAX 63 char
 
 add_user_id:
     mov rax, QWORD[user_index]
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
-    lea rax, [users+R10+256]
+    lea rax, [users+R10+196]
     ;read in rbx
     mov edx, DWORD ebx
     mov [rax], edx
     ret
     
 print_user: ;index in rax
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
     mov rdi, QWORD surname
@@ -769,24 +758,25 @@ print_user: ;index in rax
     call print_nl_new
     mov rdi, QWORD firstname
     call print_string_new
-    lea rdi, [users+R10+64]
+    lea rdi, [users+R10+65]
     call print_string_new
     call print_nl_new
     mov rdi, QWORD dept
     call print_string_new
-    lea rdi, [users+R10+128]
-    call print_string_new
+    lea rdi, [users+R10+130]
+    mov dl, BYTE [rdi]
+    call print_department
     call print_nl_new
     mov rdi, QWORD email
     call print_string_new
-    lea rdi, [users+R10+192]
+    lea rdi, [users+R10+131]
     call print_string_new
     mov rdi, QWORD email_end
     call print_string_new
     call print_nl_new
     mov rdi, QWORD user_id
     call print_string_new
-    lea R12, [users+R10+256]
+    lea R12, [users+R10+196]
     xor rdi, rdi
     mov edi, [R12D]
     call print_uint_new ; make it appear in the format XXXXXXX
@@ -977,12 +967,20 @@ add_user:
     call read_string_new
     mov rbx, rax
     call add_user_firstname
+    
+.ask_for_dept:    
     mov rdi, QWORD ask_for_department_input
     call print_string_new
     call print_nl_new
-    call read_string_new
+    call read_uint_new
+    cmp rax, 4
+    jg .depterror
+    cmp rax, 1
+    jl .depterror
     mov rbx, rax
     call add_user_department
+    
+    
 .ask_for_id:
     mov rdi, QWORD ask_for_user_id_input
     call print_string_new
@@ -1025,6 +1023,11 @@ add_user:
     call print_string_new
     call print_nl_new
     ret
+.depterror:
+    mov rdi, QWORD inputerror
+    call print_string_new
+    call print_nl_new
+    jmp .ask_for_dept
     
     
 delete_user:
