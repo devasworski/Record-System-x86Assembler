@@ -156,11 +156,27 @@ delete_user_from_array: ; index in rax
     inc QWORD [rsp+8]
     jmp .loop1
 
-.end:;make object in index+1 0
-    dec QWORD[user_index]
+.end:
+    mov QWORD [rsp+24], 0
+    mov rax, QWORD [rsp+16]
+    mov R11, 260
+    mul R11
+    mov R10, rax
+    lea rdx, [users+R10]
+.endloop:
+    xor R12, R12
+    mov R12B, 0
+    mov BYTE[rdx], R12B
+    inc QWORD [rsp+24]
+    inc rcx
+    cmp QWORD [rsp+24], 260
+    jne .endloop
+    
+    dec QWORD[computer_index]
     pop rbp
     add rsp, 32
     ret
+
 
 delete_computer_from_array: ; index in rax
 
@@ -198,13 +214,28 @@ delete_computer_from_array: ; index in rax
     jne .loop2
     
     mov R14, QWORD[computer_index]
-    cmp [rsp+8], R14
+    cmp [rsp+16], R14
     je .end
     inc QWORD [rsp+16]
     inc QWORD [rsp+8]
     jmp .loop1
 
-.end:;make object in index+1 0
+.end:
+    mov QWORD [rsp+24], 0;counter
+    mov rax, QWORD [rsp+16]
+    mov R11, 16
+    mul R11
+    mov R10, rax
+    lea rdx, [computers+R10]
+.endloop:
+    xor R12, R12
+    mov R12B, 0
+    mov BYTE[rdx], R12B
+    inc QWORD [rsp+24]
+    inc rcx
+    cmp QWORD [rsp+24], 16
+    jne .endloop
+    
     dec QWORD[computer_index]
     pop rbp
     add rsp, 32
@@ -540,34 +571,46 @@ search_user_id:
     add rsp, 32
     ret  
 
-add_user_name: ;MAX 63 char
+add_user_name:
     mov rax, QWORD[user_index]
     mov R11, 260
     mul R11
     mov R10, rax
     lea rax, [users+R10]
+    mov rcx, 0
 .loop: ;read from rbx
+    cmp rcx, 63
+    je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
+    inc rcx
     cmp dl, 0
     jne .loop
+.end:
+    mov [rax], BYTE 0
     ret
 
-add_user_firstname: ;MAX 63 char
+add_user_firstname:
     mov rax, QWORD[user_index]
     mov R11, 260
     mul R11
     mov R10, rax
     lea rax, [users+R10+64]
+    mov rcx, 0
 .loop: ;read from rbx
+    cmp rcx, 63
+    je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
+    inc rcx
     cmp dl, 0
     jne .loop
+.end:
+    mov [rax], BYTE 0
     ret
     
 add_user_department: ;MAX 63 char
@@ -576,13 +619,19 @@ add_user_department: ;MAX 63 char
     mul R11
     mov R10, rax
     lea rax, [users+R10+128]
+    mov rcx, 0
 .loop: ;read from rbx
+    cmp rcx, 63
+    je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
+    inc rcx
     cmp dl, 0
     jne .loop
+.end:
+    mov [rax], BYTE 0
     ret
     
 add_user_email: ;MAX 63 char
@@ -591,13 +640,19 @@ add_user_email: ;MAX 63 char
     mul R11
     mov R10, rax
     lea rax, [users+R10+192]
+    mov rcx, 0
 .loop: ;read from rbx
+    cmp rcx, 63
+    je .end
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
     inc rax
+    inc rcx
     cmp dl, 0
     jne .loop
+.end:
+    mov [rax], BYTE 0
     ret
 
 add_user_id:
