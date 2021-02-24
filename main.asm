@@ -30,6 +30,8 @@ delte_user_menu_welcome: db "You selected: Delte a user",10,"Is this correct? en
 ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in following format XXXXXXX:",0
 confirm_user_deletion: db "The User has been delteted:",0
 user_search_error_output: db "The User could not be found",0
+; other
+user_storage_full: db "The user storage is full. You can not add any new users. Please free some space, by deleting old users in order to add new users",0
 
 ;Computer Management Menu texts
 computer_menu_welcome: db 10,"You are in the Computer management menu",10,"Please select one of following options:",10,"1. Add a Computer",10,"2. Delete a Computer",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
@@ -47,6 +49,8 @@ confirm_computer_input: db "Thank you. The Following computer has been created:"
 delte_computer_menu_welcome: db "You selected: Delte a Computer",10,"Is this correct? enter yes(y) or no(n)",0
 ask_for_delete_computer_id_input: db "Please enter the Computer ID you want to deletes in following format XXXXXXX:",0
 confirm_computer_deletion: db "The Computer has been delteted:",0
+; other
+computer_storage_full: db "The computer storage is full. You can not add any new computers. Please free some space, by deleting old computers in order to add new computers",0
 
 ;Search Menu texts
 search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
@@ -221,16 +225,18 @@ add_computer_ip: ;read from rbx
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
-    
+.restart: 
+    mov QWORD[rbp-8], 0
     mov rax, QWORD[computer_index]
     mov R11, 16
     mul R11
     mov R10, rax
     lea rax, [computers+R10+4]
-.add_computer_ip_loop1: ;read from rbx
+.loop1: ;read from rbx
+    inc QWORD[rbp-8]
     mov R14,  0
     mov dl, BYTE[rbx]
-.add_computer_ip_loop2:
+.loop2:
     mov [rsp+R14], dl
     inc rbx
     inc R14
@@ -238,12 +244,16 @@ add_computer_ip: ;read from rbx
     cmp dl, 0
     je .process_read_ip_part
     cmp dl, 46
-    jne .add_computer_ip_loop2
+    jne .loop2
 .process_read_ip_part:
     mov BYTE [rsp+R14], BYTE 0
     mov R15, rax
     mov rdi, rsp
     call atoi
+    cmp rax, 0
+    jl .ip_faulty
+    cmp rax, 255
+    jg .ip_faulty
     mov R13, rax 
     mov rax, R15
     mov R12, [rax]
@@ -251,15 +261,23 @@ add_computer_ip: ;read from rbx
     mov R12B, R13B
     mov [rax], R12
     cmp dl, 0
-    je .add_computer_ip_end
+    je .end
     inc rbx
-    jmp .add_computer_ip_loop1
-.add_computer_ip_end:
-
+    jmp .loop1
+.end:
+    cmp QWORD[rbp-8], 4
+    jne .ip_faulty
     pop rbp
     add rsp, 32
     ret
-    
+.ip_faulty:
+    mov rdi, QWORD ask_for_ip_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp .restart
+        
     
 add_computer_main_user_id: ;read from rbx
     mov rax, QWORD[computer_index]
@@ -276,7 +294,8 @@ add_computer_purchase_date: ;read from rbx
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
-    
+
+.restart:        
     mov rax, QWORD[computer_index]
     mov R11, 16
     mul R11
@@ -356,10 +375,13 @@ add_computer_purchase_date: ;read from rbx
     shl R12, 16
     mov R12W, R13W
     mov [rax], R12
-    
+.end:    
     pop rbp
     add rsp, 32
     ret
+.input_error:    
+
+    jmp .restart
     
 print_computer: ; index in rax
     mov R11, 16
@@ -504,7 +526,7 @@ search_user_id:
     add rsp, 32
     ret  
 
-add_user_name:
+add_user_name: ;MAX 63 char
     mov rax, QWORD[user_index]
     mov R11, 260
     mul R11
@@ -519,7 +541,7 @@ add_user_name:
     jne .loop
     ret
 
-add_user_firstname:
+add_user_firstname: ;MAX 63 char
     mov rax, QWORD[user_index]
     mov R11, 260
     mul R11
@@ -534,7 +556,7 @@ add_user_firstname:
     jne .loop
     ret
     
-add_user_department:
+add_user_department: ;MAX 63 char
     mov rax, QWORD[user_index]
     mov R11, 260
     mul R11
@@ -549,7 +571,7 @@ add_user_department:
     jne .loop
     ret
     
-add_user_email:
+add_user_email: ;MAX 63 char
     mov rax, QWORD[user_index]
     mov R11, 260
     mul R11
@@ -768,7 +790,9 @@ search_menu:
     
  
 add_user:
-    ; check user_index below 499, otherwise give error storage full
+    mov rdx, QWORD[user_index]
+    cmp rdx, 99
+    jge .storage_full
     mov rdi, QWORD add_user_menu_welcome
     call print_string_new
     call print_nl_new
@@ -796,6 +820,8 @@ add_user:
     
     cmp rbx, 9999999
     jge .ask_for_id
+    cmp rbx, 0
+    jl .ask_for_id
     
     mov R13, rbx
     call search_user_id
@@ -826,6 +852,11 @@ add_user:
     call print_string_new
     call print_nl_new
     jmp .ask_for_id
+.storage_full:
+    mov rdi, QWORD user_storage_full
+    call print_string_new
+    call print_nl_new
+    ret
     
     
 delete_user:
@@ -840,7 +871,6 @@ delete_user:
     mov R13, rax
     call search_user_id
     cmp rax, 504
-    push rax
     jne .exists 
     mov rdi, QWORD user_search_error_output
     call print_string_new
@@ -862,6 +892,9 @@ delete_user:
 
 
 add_computer:
+    mov rdx, QWORD[computer_index]
+    cmp rdx, 499
+    jge .storage_full
     mov rdi, QWORD add_computer_menu_welcome
     call print_string_new
     call print_nl_new
@@ -872,7 +905,9 @@ add_computer:
     call read_uint_new
     mov rbx, rax    
     cmp rbx, 9999999
-    jge .ask_for_id    
+    jge .ask_for_id 
+    cmp rbx, 0
+    jl .ask_for_id   
     mov R13, rbx
     call search_computer_id
     cmp rax, 504
@@ -893,6 +928,8 @@ add_computer:
     mov rbx, rax   
     cmp rbx, 9999999
     jge .ask_for_user_id   
+    cmp rbx, 0
+    jl .ask_for_user_id   
     mov R13, rbx
     call search_user_id
     cmp rax, 504
@@ -926,6 +963,11 @@ add_computer:
     call print_string_new
     call print_nl_new
     jmp .ask_for_user_id
+.storage_full:
+    mov rdi, QWORD computer_storage_full
+    call print_string_new
+    call print_nl_new
+    ret
 
 delete_computer:
     mov rdi, QWORD delte_computer_menu_welcome
@@ -939,16 +981,14 @@ delete_computer:
     mov R13, rax
     call search_computer_id
     cmp rax, 504
-    push rax
     jne .cp_exists 
     mov rdi, QWORD computer_search_error_output
     call print_string_new
     call print_nl_new
     call print_nl_new
     call print_nl_new
-    jmp .end ;;Segmentation fault (core dumped)
+    jmp .end
 .cp_exists:   
-    pop rax 
     call delete_computer_from_array
     mov rdi, QWORD confirm_computer_deletion
     call print_string_new
