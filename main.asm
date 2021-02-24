@@ -234,6 +234,8 @@ add_computer_ip: ;read from rbx
     lea rax, [computers+R10+4]
 .loop1: ;read from rbx
     inc QWORD[rbp-8]
+    cmp QWORD[rbp-8], 4
+    jg .ip_faulty
     mov R14,  0
     mov dl, BYTE[rbx]
 .loop2:
@@ -300,87 +302,99 @@ add_computer_purchase_date: ;read from rbx
     mov R11, 16
     mul R11
     mov R10, rax
-    lea rax, [computers+R10+12]
+    lea R15, [computers+R10+12]
+    
+    mov DWORD[rbp-4], 2
+    mov R14, 0
+.readdayloop:
+    cmp DWORD[rbp-4], 0
+    jle .input_error
+    mov dl, BYTE[rbx]
+    mov [rsp+R14], dl
+    inc rbx
+    inc R14
+    dec DWORD[rbp-4]
+    cmp BYTE[rbx], 46
+    jne .readdayloop  
+    mov BYTE [rsp+R14], BYTE 0 
+    mov rdi, rsp
+    call atoi
+    cmp rax, 0
+    jle .input_error
+    cmp rax, 31
+    jg .input_error
 
-    mov R14, 0
-    mov dl, BYTE[rbx];d
-    mov [rsp+R14], dl
-    inc rbx
-    inc R14
-    mov dl, BYTE[rbx];d
-    mov [rsp+R14], dl
-    inc rbx
-    inc R14
-    inc rbx;.
-    inc R14
-    mov BYTE [rsp+R14], BYTE 0  
-    mov R15, rax
-    mov rdi, rsp
-    call atoi
     mov R13, rax 
-    mov rax, R15
-    mov R12, [rax]
+    mov R12, [R15]
     shl R12, 8
     mov R12B, R13B
-    mov [rax], R12
+    mov [R15], R12
     
+    inc rbx
+    
+    mov DWORD[rbp-4], 2
     mov R14, 0
-    mov dl, BYTE[rbx];m
+.readmonthloop:
+    cmp DWORD[rbp-4], 0
+    jle .input_error
+    mov dl, BYTE[rbx]
     mov [rsp+R14], dl
     inc rbx
     inc R14
-    mov dl, BYTE[rbx];m
-    mov [rsp+R14], dl
-    inc rbx
-    inc R14
-    inc rbx;.
-    inc R14
-    mov BYTE [rsp+R14], BYTE 0
-    mov R15, rax
+    dec DWORD[rbp-4]
+    cmp BYTE[rbx], 46
+    jne .readmonthloop
+    mov BYTE [rsp+R14], BYTE 0 
     mov rdi, rsp
     call atoi
+    cmp rax, 0
+    jle .input_error
+    cmp rax, 12
+    jg .input_error
+    
     mov R13, rax 
-    mov rax, R15
-    mov R12, [rax]
+    mov R12, [R15]
     shl R12, 8
     mov R12B, R13B
-    mov [rax], R12
+    mov [R15], R12
     
+    inc rbx
+    
+    mov DWORD[rbp-4], 4
     mov R14, 0
-    mov dl, BYTE[rbx];y
+.readyearloop:
+    cmp DWORD[rbp-4], 0
+    jle .input_error
+    mov dl, BYTE[rbx]
     mov [rsp+R14], dl
     inc rbx
     inc R14
-    mov dl, BYTE[rbx];y
-    mov [rsp+R14], dl
-    inc rbx
-    inc R14
-    mov dl, BYTE[rbx];y
-    mov [rsp+R14], dl
-    inc rbx
-    inc R14
-    mov dl, BYTE[rbx];y
-    mov [rsp+R14], dl
-    inc rbx
-    inc R14
-    inc rbx;.
-    inc R14
-    mov BYTE [rsp+R14], BYTE 0   
-    mov R15, rax
+    dec DWORD[rbp-4]
+    cmp BYTE[rbx], 0
+    jne .readyearloop
+    mov BYTE [rsp+R14], BYTE 0 
     mov rdi, rsp
     call atoi
+    cmp rax, 1900
+    jle .input_error
+    cmp rax, 2100
+    jg .input_error
+    
     mov R13, rax 
-    mov rax, R15
-    mov R12, [rax]
+    mov R12, [R15]
     shl R12, 16
     mov R12W, R13W
-    mov [rax], R12
+    mov [R15], R12
 .end:    
     pop rbp
     add rsp, 32
     ret
 .input_error:    
-
+    mov rdi, QWORD ask_for_purchase_date_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
     jmp .restart
     
 print_computer: ; index in rax
