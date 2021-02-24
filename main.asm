@@ -26,9 +26,9 @@ ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
 confirm_user_input: db "Thank you. The Following User has been created:",0
  ;delte user textss
-delte_user_menu_welcome: db "You selected: Delte a user",10,"Is this correct? enter yes(y) or no(n)",0
+delte_user_menu_welcome: db "You selected: Delte a user",0
 ask_for_user_id_delete_input: db "Please enter the User ID you want to delete in following format XXXXXXX:",0
-confirm_user_deletion: db "The User has been delteted:",0
+confirm_user_deletion: db "The User has been delteted",0
 user_search_error_output: db "The User could not be found",0
 ; other
 user_storage_full: db "The user storage is full. You can not add any new users. Please free some space, by deleting old users in order to add new users",0
@@ -46,9 +46,9 @@ ask_for_existing_user_id_input: db "I am sorry, but I can not find this USER ID"
 ask_for_purchase_date_input: db "Please enter the Date of purchase in following Format dd.mm.yyyy:",0
 confirm_computer_input: db "Thank you. The Following computer has been created:",0
  ;delete computer texts
-delte_computer_menu_welcome: db "You selected: Delte a Computer",10,"Is this correct? enter yes(y) or no(n)",0
+delte_computer_menu_welcome: db "You selected: Delte a Computer",0
 ask_for_delete_computer_id_input: db "Please enter the Computer ID you want to deletes in following format XXXXXXX:",0
-confirm_computer_deletion: db "The Computer has been delteted:",0
+confirm_computer_deletion: db "The Computer has been delteted",0
 ; other
 computer_storage_full: db "The computer storage is full. You can not add any new computers. Please free some space, by deleting old computers in order to add new computers",0
 
@@ -61,11 +61,14 @@ ask_for_computer_search_id_input: db "Enter the Computer ID you want ot look up 
 computer_search_result_output: db "Following Computer has been found:",0
 computer_search_error_output: db "The computer could not be found",0
 
-
-
 ;User Search Menu texts
-computer_user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
+user_search_welcome: db 10,"You are in the User Search menu",0
 ask_for_user_search_id_input: db "Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
+user_search_result_output: db "Following User has been found:",0
+
+
+;Main User Search Menu texts
+computer_user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
 computer_user_search_result_output: db "This is the email of the mail user: ",0
 computer_user_search_error_output: db "The computer could not be found",0
 
@@ -697,6 +700,9 @@ print_user: ;index in rax
     lea R12, [users+R10+256]
     mov rdi, [R12]
     call print_uint_new ; make it appear in the format XXXXXXX
+    call print_nl_new
+    call print_nl_new
+    call print_nl_new
     ret
     
     
@@ -848,6 +854,7 @@ search_menu:
     jmp .selection
 .search_user:
     ;NOT IMPLEMENTED
+    call search_user
     jmp .selection
 .search_main_user:
     call find_main_user
@@ -1068,6 +1075,40 @@ delete_computer:
 .end:
     ret
         
+search_user:
+    mov rdi, QWORD user_search_welcome
+    call print_string_new
+    call print_nl_new
+.loop:
+    mov rdi, QWORD ask_for_user_search_id_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov bl, BYTE[rax] 
+    cmp bl, 120
+    je .end
+    mov rdi, rax
+    call atoi
+    mov R13, rax
+    call search_user_id
+    cmp rax, 504
+    jne .exists    
+    mov rdi, QWORD user_search_error_output
+    call print_string_new
+    call print_nl_new
+    call print_nl_new
+    call print_nl_new
+    jmp .loop
+.exists:
+    mov rdi, QWORD user_search_result_output
+    push rax
+    call print_string_new
+    call print_nl_new
+    pop rax
+    call print_user
+    jmp .loop
+.end:
+    ret
                 
 search_computer:
     mov rdi, QWORD computer_search_welcome
