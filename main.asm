@@ -252,7 +252,7 @@ delete_user_from_array: ; index in rax
     cmp QWORD [rsp+24], 200
     jne .endloop
     
-    dec QWORD[computer_index]
+    dec QWORD[user_index]
     pop rbp
     add rsp, 32
     ret
