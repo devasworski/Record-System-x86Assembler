@@ -42,7 +42,7 @@ add_computer_menu_welcome: db 10,"You can now create a new Computer",0
 ask_for_computer_id_input: db "Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
 ask_for_ip_input: db "Please enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
-ask_for_differnet_ip_input: db "Sorry, but this IP is already taken. IPs are unique in a Network. Please check your input and enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
+ask_for_differnet_ip_input: db "Sorry, but this IP is already taken. A IP is unique in a Network",10,"Please check your input and enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
 ask_for_main_user_id_input: db "Please enter the ID of the main user in the following Format XXXXXXX:",0
 ask_for_os_input: db "Please choose the OS:",10,"1. Windows",10,"2. Linux",10,"3. MacOS",10,"Enter the number of the OS you want to choose:",0
 ask_for_different_main_user_id: db "Sorry, but this User ID does not exists. ",0
@@ -75,7 +75,7 @@ user_search_result_output: db "Following User has been found:",0
 
 ;Main User Search Menu texts
 computer_user_search_welcome: db 10,"You are in the Email adress of main user Search menu",0
-computer_user_search_result_output: db "This is the email of the mail user: ",0
+computer_user_search_result_output: db "This is the email of the main user: ",0
 computer_user_search_error_output: db "The computer could not be found",0
 
 ;Print texts
@@ -102,8 +102,8 @@ leapmonths: db 31,29,31,30,31,30,31,31,30,31,30,31
 currentdate: times 4 db 0 
 
 ;File locations
-user_file_location: db "users.cvs",0
-computer_file_location: db "computers.cvs",0
+user_file_location: db "users",0
+computer_file_location: db "computers",0
 
 ;enums
 development: db"Development",0
@@ -123,6 +123,13 @@ computer_index: dq 0
 ;arrays
 users: times 20000 db 0
 computers: times 8500 db 0
+
+section .bss
+
+;File descriptors
+user_file_descriptor: resq 1
+computer_file_descriptor: resq 1
+
 
 ;users: (4*64 + 4)*100 = 26000 byte
 ;computers: (4)*500 = 2000 doublewords
@@ -1535,16 +1542,16 @@ find_main_user:
     push rax
     call print_string_new
     pop rax
-    mov R11, 16
+    mov R11, 17
     mul R11
     mov R10, rax
     lea rax, [computers+R10+8]
-    mov R13, [rax] 
+    mov R13D, DWORD[rax] 
     call search_user_id
-    mov R11, 260
+    mov R11, 200
     mul R11
     mov R10, rax
-    lea rdi, [users+R10+192]
+    lea rdi, [users+R10+131]
     call print_string_new
     mov rdi, QWORD email_end
     call print_string_new
