@@ -59,13 +59,13 @@ search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of
 
 ;Computer Search Menu texts
 computer_search_welcome: db 10,"You are in the Computer Search menu",0
-ask_for_computer_search_id_input: db "Enter the Computer ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
+ask_for_computer_search_id_input: db 10,"Enter the Computer ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
 computer_search_result_output: db "Following Computer has been found:",0
 computer_search_error_output: db "The computer could not be found",0
 
 ;User Search Menu texts
 user_search_welcome: db 10,"You are in the User Search menu",0
-ask_for_user_search_id_input: db "Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
+ask_for_user_search_id_input: db 10,"Enter the User ID you want ot look up in the following format XXXXXXX:",10,"(Press x go back to Main Menu)",0
 user_search_result_output: db "Following User has been found:",0
 
 
@@ -405,7 +405,7 @@ add_computer_os: ;read from rbx
     mov R10, rax
     lea rax, [computers+R10+16]
     mov dl, BYTE bl
-    mov [rax], dl
+    mov BYTE [rax], dl
     ret
     
     
@@ -445,7 +445,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12, [R15]
     shl R12, 8
     mov R12B, R13B
-    mov [R15], R12B
+    mov [R15], R12D
     
     inc rbx
     
@@ -473,7 +473,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12, [R15]
     shl R12, 8
     mov R12B, R13B
-    mov [R15], R12B
+    mov [R15], R12D
     
     inc rbx
     
@@ -501,7 +501,7 @@ add_computer_purchase_date: ;read from rbx
     mov R12, [R15]
     shl R12, 16
     mov R12W, R13W
-    mov [R15], R12W
+    mov [R15], R12D
 .end:    
     pop rbp
     add rsp, 32
