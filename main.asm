@@ -46,6 +46,7 @@ ask_for_different_main_user_id: db "Sorry, but this User ID does not exists. ",0
 ask_for_existing_user_id_input: db "I am sorry, but I can not find this USER ID",10,"Please enter an exisiting USER ID:",0
 exit_yes_no: db "Do you want to go back to the main menu? (y/n)",0
 ask_for_purchase_date_input: db "Please enter the Date of purchase in following Format dd.mm.yyyy:",0
+ask_for_purchase_date_input_future_error: db "I am sorry, but the date you entered is in the future",10,"Please enter the Date of purchase in following Format dd.mm.yyyy:",0
 confirm_computer_input: db "Thank you. The Following computer has been created:",10,0
  ;delete computer texts
 delte_computer_menu_welcome: db 10,"You selected: Delte a Computer",0
@@ -80,16 +81,16 @@ print_all_computer_welcome: db "Printing all Comuters",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
-surname: db "Surname: ",90,0
+surname: db "Surname: ",9,0
 firstname: db "First name: ",90,0
-dept: db "Department: ",90,0
-email: db "Email: ",90,0
-user_id: db "User ID: ",90,"p",0
-computer_id: db "Computer ID: ",90,"c",0
-purchase_date: db "Purchase Date: ",90,0
-computer_ip: db "IP Adress: ",90,0
-computer_os: db "OS: ",90,0
-amount_users db "Amount Users: ",0
+dept: db "Department: ",9,0
+email: db "Email: ",9,0
+user_id: db "User ID: ",9,9,"p",0
+computer_id: db "Computer ID: ",9,"c",0
+purchase_date: db "Purchase Date: ",9,0
+computer_ip: db "IP Adress: ",9,9,0
+computer_os: db "OS: ",9,9,0
+amount_users: db "Amount Users: ",0
 amount_computers: db "Amount Computers: ",0
 
 ;curent date
@@ -403,7 +404,7 @@ add_computer_id: ;read from rbx
     mov DWORD[rax], edx
     ret
     
-add_computer_ip: ;read from rbx ;CHANGE
+add_computer_ip: ;read from rbx
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -413,7 +414,7 @@ add_computer_ip: ;read from rbx ;CHANGE
     mov R11, 17
     mul R11
     mov R10, rax
-    lea rax, [computers+R10+4]
+    lea R15, [computers+R10+4]
 .loop1: ;read from rbx
     inc QWORD[rbp-8]
     cmp QWORD[rbp-8], 4
@@ -431,22 +432,17 @@ add_computer_ip: ;read from rbx ;CHANGE
     jne .loop2
 .process_read_ip_part:
     mov BYTE [rsp+R14], BYTE 0
-    mov R15, rax
     mov rdi, rsp
     call atoi
     cmp rax, 0
     jl .ip_faulty
     cmp rax, 255
     jg .ip_faulty
-    mov R13, rax 
-    mov rax, R15
-    mov R12, [rax]
-    shl R12, 8
-    mov R12B, R13B
-    mov [rax], R12
+    mov BYTE [R15], al
     cmp dl, 0
     je .end
     inc rbx
+    inc R15
     jmp .loop1
 .end:
     cmp QWORD[rbp-8], 4
@@ -484,7 +480,7 @@ add_computer_os: ;read from rbx
     ret
     
     
-add_computer_purchase_date: ;read from rbx ;CHANGE
+add_computer_purchase_date: ;read from rbx
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -516,12 +512,9 @@ add_computer_purchase_date: ;read from rbx ;CHANGE
     cmp rax, 31
     jg .input_error
 
-    mov R13, rax 
-    mov R12, [R15]
-    shl R12, 8
-    mov R12B, R13B
-    mov [R15], R12D
+    mov BYTE[R15], al
     
+    inc R15
     inc rbx
     
     mov DWORD[rbp-4], 2
@@ -544,12 +537,9 @@ add_computer_purchase_date: ;read from rbx ;CHANGE
     cmp rax, 12
     jg .input_error
     
-    mov R13, rax 
-    mov R12, [R15]
-    shl R12, 8
-    mov R12B, R13B
-    mov [R15], R12D
+    mov BYTE[R15], al
     
+    inc R15
     inc rbx
     
     mov DWORD[rbp-4], 4
@@ -572,17 +562,45 @@ add_computer_purchase_date: ;read from rbx ;CHANGE
     cmp rax, 2100
     jg .input_error
     
-    mov R13, rax 
-    mov R12, [R15]
-    shl R12, 16
-    mov R12W, R13W
-    mov [R15], R12D
-.end:    
+    mov WORD [R15], ax
+    jmp .check_date
+.end:
     pop rbp
     add rsp, 32
     ret
 .input_error:    
     mov rdi, QWORD ask_for_purchase_date_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp .restart
+.check_date:
+    xor R10, R10
+    xor R12, R12
+    mov R13, QWORD currentdate
+    lea R11, [computers+R10+14]
+    mov R10W, WORD[R11]
+    mov R12W, WORD[R13+2]
+    cmp R10W, R12W
+    jl .date_ok
+    jg .date_false
+    sub R11, 2
+    mov R12B, BYTE[R13+1]
+    mov R10B, BYTE[R11]
+    cmp R10B, R12B
+    jl .date_ok
+    jg .date_false
+    dec R11
+    mov R12B, BYTE[R13]
+    mov R10B, BYTE[R11]
+    cmp R10B, R12B
+    jl .date_ok
+    jg .date_false
+.date_ok:
+    jmp .end
+.date_false:
+    mov rdi, QWORD ask_for_purchase_date_input_future_error
     call print_string_new
     call print_nl_new
     call read_string_new
@@ -608,37 +626,31 @@ print_computer: ; index in rax
     call print_os 
     call print_nl_new
     
-    mov rdi, QWORD computer_ip; CHANGE
+    mov rdi, QWORD computer_ip
     call print_string_new
+    xor rdi, rdi
     lea R11, [computers+R10+4]
-    mov R12D, [R11]
-    mov R13W, R12W
-    shr R12, 16
-    mov R14W, R12W
-    xor rdx, rdx
-    mov dx, R14W
-    shr dx, 8
-    mov rdi, rdx
-    call print_int_new
+    mov R12B, BYTE[R11]
+    mov dil, R12B
+    call print_uint_new
     mov rdi, 46
     call print_char_new
-    xor rdx, rdx
-    mov dl, R14B
-    mov rdi, rdx
-    call print_int_new
+    lea R11, [computers+R10+5]
+    mov R12B, BYTE[R11]
+    mov dil, R12B
+    call print_uint_new
     mov rdi, 46
     call print_char_new
-    xor rdx, rdx
-    mov dx, R13W
-    shr dx, 8
-    mov rdi, rdx
-    call print_int_new
+    lea R11, [computers+R10+6]
+    mov R12B, BYTE[R11]
+    mov dil, R12B
+    call print_uint_new
     mov rdi, 46
     call print_char_new
-    xor rdx, rdx
-    mov dl, R13B
-    mov rdi, rdx
-    call print_int_new
+    lea R11, [computers+R10+7]
+    mov R12B, BYTE[R11]
+    mov dil, R12B
+    call print_uint_new
     
     
     call print_nl_new
@@ -649,29 +661,24 @@ print_computer: ; index in rax
     call print_uint_new 
     
     call print_nl_new
-    mov rdi, QWORD purchase_date ;CHANGE
+    mov rdi, QWORD purchase_date
     call print_string_new
+    xor rdi, rdi
     lea R11, [computers+R10+12]
-    mov R12D, [R11]
-    mov R13W, R12W
-    shr R12, 16
-    mov R14W, R12W
-    xor rdx, rdx
-    mov dx, R14W
-    shr dx, 8
-    mov rdi, rdx
-    call print_int_new
+    mov R12B, BYTE[R11]
+    mov dil, R12B
+    call print_uint_new
     mov rdi, 46
     call print_char_new
-    xor rdx, rdx
-    mov dl, R14B
-    mov rdi, rdx
-    call print_int_new
+    lea R11, [computers+R10+13]
+    mov R12B, BYTE[R11]
+    mov dil, R12B
+    call print_uint_new
     mov rdi, 46
     call print_char_new
-    xor rdx, rdx
-    mov dx, R13W
-    mov rdi, rdx
+    lea R11, [computers+R10+14]
+    mov R12W, WORD[R11]
+    mov di, R12W
     call print_int_new
     
     call print_nl_new
