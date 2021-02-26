@@ -5,7 +5,7 @@ global main
 section .data
 
 ;Main Menu texts
-hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,0
+hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,10,"Today is the: ",0
 main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage Users",10,"2. Manage Computers",10,"3. Search",10,"4. EXIT",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;error messages
@@ -55,7 +55,7 @@ confirm_computer_deletion: db "The Computer has been delteted",0
 computer_storage_full: db 10,"The computer storage is full. You can not add any new computers. Please free some space, by deleting old computers in order to add new computers",0
 
 ;Search Menu texts
-search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Print all Users",10,"5. Print all Computers",10,"6. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
+search_menu_welcome: db 10,"You are in the Search Menu",10,"Please select one of the following options:",10,10,"1. Search for a Computer",10,"2. Search for a User",10,"3. Search for Computer Main User",10,"4. Print all Users",10,"5. Print all Computers",10,"6. Print amount of Users",10,"7. Print amount of Computers",10,"8. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;Computer Search Menu texts
 computer_search_welcome: db 10,"You are in the Computer Search menu",0
@@ -80,17 +80,22 @@ print_all_computer_welcome: db "Printing all Comuters",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
-surname: db "Surname: ",0
-firstname: db "First name: ",0
-dept: db "Department: ",0
-email: db "Email: ",0
-user_id: db "User ID: p",0
-computer_id: db "Computer ID: c",0
-purchase_date: db "Purchase Date: ",0
-computer_ip: db "IP Adress: ",0
-computer_os: db "OS: ",0
+surname: db "Surname: ",90,0
+firstname: db "First name: ",90,0
+dept: db "Department: ",90,0
+email: db "Email: ",90,0
+user_id: db "User ID: ",90,"p",0
+computer_id: db "Computer ID: ",90,"c",0
+purchase_date: db "Purchase Date: ",90,0
+computer_ip: db "IP Adress: ",90,0
+computer_os: db "OS: ",90,0
+amount_users db "Amount Users: ",0
+amount_computers: db "Amount Computers: ",0
 
-
+;curent date
+months: db 31,28,31,30,31,30,31,31,30,31,30,31
+leapmonths: db 31,29,31,30,31,30,31,31,30,31,30,31
+currentdate: times 4 db 0 
 
 ;File locations
 user_file_location: db "users.cvs",0
@@ -142,6 +147,73 @@ computers: times 8500 db 0
 ; 0, 65, 130, 131, 196
 
 section .text
+
+print_current_date:
+    xor rdi, rdi
+    mov dil, BYTE[R13]
+    call print_uint_new
+    mov rdi, 46
+    call print_char_new
+    xor rdi, rdi
+    call print_uint_new
+    mov dil, BYTE[R13+1]
+    call print_uint_new
+    mov rdi, 46
+    call print_char_new
+    xor rdi, rdi
+    xor rdi, rdi
+    mov di, WORD[R13+2]
+    call print_uint_new
+    ret
+    
+get_current_date:
+    mov rbp, rsp; for correct debugging 
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32
+    mov R13, QWORD currentdate   
+    mov rax, 201
+    xor rdi, rdi        
+    syscall  
+    xor rdx, rdx
+    mov rcx, 86400
+    div rcx    
+    xor rdx, rdx
+    mov rcx, 365
+    div rcx   
+    mov R12, 1970
+    add R12, rax
+    mov WORD [R13+2], R12W
+    mov R10, rdx    
+    xor rdx, rdx
+    add rax, 2
+    mov rcx, 4
+    div rcx   
+    sub R10, rax
+    add R10, 1
+    xor rbx, rbx
+    mov R11, 1
+    cmp rdx, 0
+    je .leapyear
+    mov rbx, QWORD months
+    jmp .monthloop
+.leapyear:
+    mov rbx, QWORD leapmonths
+    jmp .monthloop
+.monthloop:
+    cmp R10B, BYTE[rbx]
+    jle .endmonthloop
+    inc R11
+    sub R10B, BYTE[rbx]
+    inc rbx
+    jmp .monthloop
+.endmonthloop:
+    mov BYTE [R13], R10B
+    mov BYTE [R13+1], R11B
+
+    add rsp, 32
+    pop rbp
+    ret
 
 print_os:; index in rdx
     cmp rdx, 1
@@ -331,8 +403,7 @@ add_computer_id: ;read from rbx
     mov DWORD[rax], edx
     ret
     
-add_computer_ip: ;read from rbx
-    ;read till dot or null then call atoi put in the 2 8bit register and then left shift to upper 16bit and then fill up lower
+add_computer_ip: ;read from rbx ;CHANGE
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -413,7 +484,7 @@ add_computer_os: ;read from rbx
     ret
     
     
-add_computer_purchase_date: ;read from rbx
+add_computer_purchase_date: ;read from rbx ;CHANGE
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -537,7 +608,7 @@ print_computer: ; index in rax
     call print_os 
     call print_nl_new
     
-    mov rdi, QWORD computer_ip
+    mov rdi, QWORD computer_ip; CHANGE
     call print_string_new
     lea R11, [computers+R10+4]
     mov R12D, [R11]
@@ -578,7 +649,7 @@ print_computer: ; index in rax
     call print_uint_new 
     
     call print_nl_new
-    mov rdi, QWORD purchase_date
+    mov rdi, QWORD purchase_date ;CHANGE
     call print_string_new
     lea R11, [computers+R10+12]
     mov R12D, [R11]
@@ -801,6 +872,9 @@ main:
 
     mov rdi, QWORD hello1
     call print_string_new
+    call get_current_date
+    call print_current_date
+    call print_nl_new
     call print_nl_new
     call main_menu
     pop rbp
@@ -936,6 +1010,10 @@ search_menu:
     cmp rax, 5
     je .print_all_computer
     cmp rax, 6
+    je .print_num_users
+    cmp rax, 7
+    je .print_num_computers
+    cmp rax, 8
     je .end
     mov rdi, QWORD inputerror
     call print_string_new
@@ -956,6 +1034,12 @@ search_menu:
     jmp .selection
 .print_all_computer:
     call print_all_computer
+    jmp .selection 
+.print_num_users:
+    call print_num_users
+    jmp .selection
+.print_num_computers:
+    call print_num_computers
     jmp .selection 
 .end:
     mov rdi, QWORD divider
@@ -1054,6 +1138,10 @@ delete_user:
     call read_uint_new 
     mov rdi, rax
     mov R13, rax
+    cmp R13, 9999999
+    jge .id_error
+    cmp R13, 0
+    jl .id_error
     call search_user_id
     cmp rax, 504
     jne .exists 
@@ -1068,7 +1156,12 @@ delete_user:
     call print_nl_new
     jmp .end
 .end:
-    ret    
+    ret   
+.id_error:
+    mov rdi, QWORD inputerror 
+    call print_string_new
+    call print_nl_new
+    jmp .end
 
 
 
@@ -1183,6 +1276,10 @@ delete_computer:
     call print_nl_new
     call read_uint_new 
     mov R13, rax
+    cmp R13, 9999999
+    jge .id_error
+    cmp R13, 0
+    jl .id_error
     call search_computer_id
     cmp rax, 504
     jne .cp_exists 
@@ -1202,6 +1299,11 @@ delete_computer:
     jmp .end
 .end:
     ret
+.id_error:
+    mov rdi, QWORD inputerror 
+    call print_string_new
+    call print_nl_new
+    jmp .end
         
 search_user:
     mov rdi, QWORD user_search_welcome
@@ -1374,4 +1476,19 @@ print_all_computer:
     call print_string_new
     pop rbp
     add rsp, 32
+    ret
+    
+print_num_users:
+    mov rdi, QWORD amount_users
+    call print_string_new
+    mov rdi, QWORD [user_index]
+    call print_uint_new
+    call print_nl_new
+    ret
+print_num_computers:
+    mov rdi, QWORD amount_computers
+    call print_string_new
+    mov rdi, QWORD [computer_index]
+    call print_uint_new
+    call print_nl_new
     ret
