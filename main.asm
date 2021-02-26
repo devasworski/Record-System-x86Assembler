@@ -81,10 +81,10 @@ print_all_computer_welcome: db "Printing all Comuters",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
-surname: db "Surname: ",9,0
-firstname: db "First name: ",90,0
+surname: db "Surname: ",9,9,0
+firstname: db "First name: ",9,0
 dept: db "Department: ",9,0
-email: db "Email: ",9,0
+email: db "Email: ",9,9,0
 user_id: db "User ID: ",9,9,"p",0
 computer_id: db "Computer ID: ",9,"c",0
 purchase_date: db "Purchase Date: ",9,0
@@ -115,6 +115,7 @@ mac: db "MacOS",0
 ;index
 user_index: dq 0
 computer_index: dq 0
+
 
 ;arrays
 users: times 20000 db 0
@@ -148,6 +149,36 @@ computers: times 8500 db 0
 ; 0, 65, 130, 131, 196
 
 section .text
+
+print_id: ;read from rdi
+    mov R9,7
+    mov rax, rdi
+    mov R15, rdi
+    cmp rdi, 10
+    mov rcx, 10
+    jl .loopend
+.loop:
+    xor rdx, rdx
+    div rcx
+    dec R9
+    cmp rax, 10
+    jge .loop
+.loopend:
+    dec R9
+
+.print_loop:
+    cmp R9, 0
+    jle .end
+    mov rdi, '0'
+    call print_char_new
+    dec R9
+    jmp .print_loop
+    
+.end:
+    mov rdi, R15
+    call print_uint_new 
+    call print_nl_new
+    ret
 
 print_current_date:
     xor rdi, rdi
@@ -616,8 +647,7 @@ print_computer: ; index in rax
     call print_string_new
     lea R12D, [computers+R10]
     mov edi, [R12]
-    call print_uint_new 
-    call print_nl_new
+    call print_id
     
     mov rdi, QWORD computer_os
     call print_string_new
@@ -658,9 +688,8 @@ print_computer: ; index in rax
     call print_string_new
     lea R12D, [computers+R10+8]
     mov edi, [R12]
-    call print_uint_new 
+    call print_id
     
-    call print_nl_new
     mov rdi, QWORD purchase_date
     call print_string_new
     xor rdi, rdi
@@ -861,9 +890,8 @@ print_user: ;index in rax
     lea R12, [users+R10+196]
     xor rdi, rdi
     mov edi, [R12D]
-    call print_uint_new ; make it appear in the format XXXXXXX
+    call print_id
     
-    call print_nl_new
     ret
     
     
@@ -1096,7 +1124,7 @@ add_user:
     cmp rbx, 9999999
     jge .ask_for_id
     cmp rbx, 0
-    jl .ask_for_id
+    jle .ask_for_id
     
     mov R13, rbx
     call search_user_id
@@ -1148,7 +1176,7 @@ delete_user:
     cmp R13, 9999999
     jge .id_error
     cmp R13, 0
-    jl .id_error
+    jle .id_error
     call search_user_id
     cmp rax, 504
     jne .exists 
@@ -1188,7 +1216,7 @@ add_computer:
     cmp rbx, 9999999
     jge .ask_for_id 
     cmp rbx, 0
-    jl .ask_for_id   
+    jle .ask_for_id   
     mov R13, rbx
     call search_computer_id
     cmp rax, 504
@@ -1221,7 +1249,7 @@ add_computer:
     cmp rbx, 9999999
     jge .ask_for_user_id   
     cmp rbx, 0
-    jl .ask_for_user_id   
+    jle .ask_for_user_id   
     mov R13, rbx
     call search_user_id
     cmp rax, 504
@@ -1286,7 +1314,7 @@ delete_computer:
     cmp R13, 9999999
     jge .id_error
     cmp R13, 0
-    jl .id_error
+    jle .id_error
     call search_computer_id
     cmp rax, 504
     jne .cp_exists 
@@ -1360,6 +1388,10 @@ search_computer:
     mov rdi, rax
     call atoi
     mov R13, rax
+    cmp R13, 9999999
+    jge .id_error
+    cmp R13, 0
+    jle .id_error
     call search_computer_id
     cmp rax, 504
     jne .exists    
@@ -1377,6 +1409,11 @@ search_computer:
     jmp .loop
 .end:
     ret
+.id_error:
+    mov rdi, QWORD inputerror 
+    call print_string_new
+    call print_nl_new
+    jmp .loop
 
 
 find_main_user:
@@ -1394,6 +1431,10 @@ find_main_user:
     mov rdi, rax
     call atoi
     mov R13, rax
+    cmp R13, 9999999
+    jge .id_error
+    cmp R13, 0
+    jle .id_error
     call search_computer_id
     cmp rax, 504
     jne .exists    
@@ -1423,6 +1464,11 @@ find_main_user:
     jmp .loop
 .end:
     ret
+.id_error:
+    mov rdi, QWORD inputerror 
+    call print_string_new
+    call print_nl_new
+    jmp .loop
     
 print_all_user:
     push rbp
