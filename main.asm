@@ -607,6 +607,7 @@ add_computer_purchase_date: ;read from rbx
     mov rbx, rax
     jmp .restart
 .check_date:
+    call get_current_date
     xor R10, R10
     xor R12, R12
     mov R13, QWORD currentdate
@@ -616,7 +617,9 @@ add_computer_purchase_date: ;read from rbx
     cmp R10W, R12W
     jl .date_ok
     jg .date_false
-    sub R11, 2
+    xor R12,R12
+    xor R10,R10
+    dec R11
     mov R12B, BYTE[R13+1]
     mov R10B, BYTE[R11]
     cmp R10B, R12B
