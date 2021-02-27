@@ -14,6 +14,7 @@ inputerror: db "I am sorry, but I couldn't understand your input",10,"Please try
 ;generic messages
 divider: db 10,"--------------------------------------------------------------------",10,0
 error: db "error",0
+only_64_allowed: db "Only up to 64 characters are allowed!",10,"Please try again:",0
 
 ;User Management Menu texts
 user_menu_welcome: db 10,"You are in the User account management menu",10,"Please select on of the following options:",10,10,"1. Add a User",10,"2. Delete a User",10,"3. Go to Main Menu",10,10,"Enter the number of the menu you want to enter:",10,0
@@ -41,7 +42,7 @@ add_computer_menu_welcome: db 10,"You can now create a new Computer",0
 ask_for_computer_id_input: db "Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
 ask_for_ip_input: db "Please enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
-ask_for_differnet_ip_input: db "Sorry, but this IP is already taken. IPs are unique in this Network. Please check your input adn enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
+ask_for_differnet_ip_input: db "Sorry, but this IP is already taken. IPs are unique in a Network. Please check your input and enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
 ask_for_main_user_id_input: db "Please enter the ID of the main user in the following Format XXXXXXX:",0
 ask_for_os_input: db "Please choose the OS:",10,"1. Windows",10,"2. Linux",10,"3. MacOS",10,"Enter the number of the OS you want to choose:",0
 ask_for_different_main_user_id: db "Sorry, but this User ID does not exists. ",0
@@ -817,8 +818,8 @@ add_user_name:
     lea rax, [users+R10]
     mov rcx, 0
 .loop: ;read from rbx
-    cmp rcx, 64
-    je .end
+    cmp rcx, 65
+    je .tolong
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
@@ -826,9 +827,14 @@ add_user_name:
     inc rcx
     cmp dl, 0
     jne .loop
-.end:
-    mov [rax], BYTE 0
     ret
+.tolong:
+    mov rdi, QWORD only_64_allowed
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp add_user_name
 
 add_user_firstname:
     mov rax, QWORD[user_index]
@@ -838,8 +844,8 @@ add_user_firstname:
     lea rax, [users+R10+65]
     mov rcx, 0
 .loop: ;read from rbx
-    cmp rcx, 64
-    je .end
+    cmp rcx, 65
+    je .tolong
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
@@ -847,9 +853,14 @@ add_user_firstname:
     inc rcx
     cmp dl, 0
     jne .loop
-.end:
-    mov [rax], BYTE 0
     ret
+.tolong:
+    mov rdi, QWORD only_64_allowed
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp add_user_firstname
     
 add_user_department:
     mov rax, QWORD[user_index]
@@ -873,8 +884,8 @@ add_user_email:
     lea rax, [users+R10+131]
     mov rcx, 0
 .loop: ;read from rbx
-    cmp rcx, 64
-    je .end
+    cmp rcx, 65
+    je .tolong
     mov dl, BYTE[rbx]
     mov [rax], dl
     inc rbx
@@ -882,9 +893,14 @@ add_user_email:
     inc rcx
     cmp dl, 0
     jne .loop
-.end:
-    mov [rax], BYTE 0
     jmp .check_email_unique
+.tolong:
+    mov rdi, QWORD only_64_allowed
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp .restart
 .not_unique:
     mov rdi, QWORD ask_for_differnet_email_input
     call print_string_new
