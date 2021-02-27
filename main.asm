@@ -24,6 +24,7 @@ ask_for_department_input: db "Please choose the department:",10,"1. IT Support",
 ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
 ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
+ask_for_differnet_email_input: db "This emailadress is already in use. Please choose a different email adress!",10,"Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
 confirm_user_input: db "Thank you. The Following User has been created:",10,0
  ;delte user textss
 delte_user_menu_welcome: db 10,"You selected: Delte a user",0
@@ -861,7 +862,11 @@ add_user_department:
     ret
     
 add_user_email:
-    mov rax, QWORD[user_index]
+    push  rbp
+    mov rbp, rsp
+    sub rsp, 32 
+.restart:
+     mov rax, QWORD[user_index]
     mov R11, 200
     mul R11
     mov R10, rax
@@ -879,6 +884,39 @@ add_user_email:
     jne .loop
 .end:
     mov [rax], BYTE 0
+    jmp .check_email_unique
+.not_unique:
+    mov rdi, QWORD ask_for_differnet_email_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp .restart
+.check_email_unique: 
+    mov QWORD[rbp-8], 0 
+.unique_loop:
+    mov rdx, QWORD[user_index]
+    cmp [rbp-8], rdx
+    je .unique
+    mov rax, [rbp-8]
+    mov R11, 200
+    mul R11
+    mov R10, rax
+    lea rdi, [users+R10+131]
+    mov R14, [rbp-8]
+    inc QWORD[rbp-8]
+    mov rax, QWORD[user_index]
+    mov R11, 200
+    mul R11
+    mov R10, rax
+    lea rsi, [users+R10+131]
+    call strings_are_equal
+    cmp rax, 1
+    jne .unique_loop
+    jmp .not_unique
+.unique:
+    pop rbp
+    add rsp, 32
     ret
 
 add_user_id:
