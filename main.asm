@@ -40,6 +40,7 @@ add_computer_menu_welcome: db 10,"You can now create a new Computer",0
 ask_for_computer_id_input: db "Please enter the Computer ID in the Format XXXXXXX:",0
 ask_for_differn_computer_id_input: db "Sorry, but this Computer ID is allready taken",10,"Please enter a differnt Computer ID:",0
 ask_for_ip_input: db "Please enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
+ask_for_differnet_ip_input: db "Sorry, but this IP is already taken. IPs are unique in this Network. Please check your input adn enter the Computer IP in the format XXX.XXX.XXX.XXX:",0
 ask_for_main_user_id_input: db "Please enter the ID of the main user in the following Format XXXXXXX:",0
 ask_for_os_input: db "Please choose the OS:",10,"1. Windows",10,"2. Linux",10,"3. MacOS",10,"Enter the number of the OS you want to choose:",0
 ask_for_different_main_user_id: db "Sorry, but this User ID does not exists. ",0
@@ -81,14 +82,14 @@ print_all_computer_welcome: db "Printing all Comuters",0
 
 ;text blocks
 email_end: db "@helpdesk.co.uk",0
-surname: db "Surname: ",9,9,0
+surname: db "Surname: ",9,0
 firstname: db "First name: ",9,0
 dept: db "Department: ",9,0
 email: db "Email: ",9,9,0
-user_id: db "User ID: ",9,9,"p",0
+user_id: db "User ID: ",9,"p",0
 computer_id: db "Computer ID: ",9,"c",0
 purchase_date: db "Purchase Date: ",9,0
-computer_ip: db "IP Adress: ",9,9,0
+computer_ip: db "IP Adress: ",9,0
 computer_os: db "OS: ",9,9,0
 amount_users: db "Amount Users: ",0
 amount_computers: db "Amount Computers: ",0
@@ -478,9 +479,7 @@ add_computer_ip: ;read from rbx
 .end:
     cmp QWORD[rbp-8], 4
     jne .ip_faulty
-    pop rbp
-    add rsp, 32
-    ret
+    jmp .check_computer_ip_unique
 .ip_faulty:
     mov rdi, QWORD ask_for_ip_input
     call print_string_new
@@ -488,7 +487,39 @@ add_computer_ip: ;read from rbx
     call read_string_new
     mov rbx, rax
     jmp .restart
-        
+.not_unique:
+    mov rdi, QWORD ask_for_differnet_ip_input
+    call print_string_new
+    call print_nl_new
+    call read_string_new
+    mov rbx, rax
+    jmp .restart
+.check_computer_ip_unique: 
+    mov QWORD[rbp-8], 0 
+.unique_loop:
+    mov rdx, QWORD[computer_index]
+    cmp [rbp-8], rdx
+    je .unique
+    mov rax, [rbp-8]
+    mov R11, 17
+    mul R11
+    mov R10, rax
+    lea R15, [computers+R10+4]
+    mov R14, [rbp-8]
+    inc QWORD[rbp-8]
+    mov rax, QWORD[computer_index]
+    mov R11, 17
+    mul R11
+    mov R10, rax
+    lea rcx, [computers+R10+4]
+    mov R13D, DWORD[rcx]
+    cmp R13D, [R15]
+    jne .unique_loop
+    jmp .not_unique
+.unique:
+    pop rbp
+    add rsp, 32
+    ret
     
 add_computer_main_user_id: ;read from rbx
     mov rax, QWORD[computer_index]
@@ -607,11 +638,10 @@ add_computer_purchase_date: ;read from rbx
     mov rbx, rax
     jmp .restart
 .check_date:
-    call get_current_date
-    xor R10, R10
-    xor R12, R12
     mov R13, QWORD currentdate
     lea R11, [computers+R10+14]
+    xor R12, R12
+    xor R10, R10
     mov R10W, WORD[R11]
     mov R12W, WORD[R13+2]
     cmp R10W, R12W
@@ -715,6 +745,7 @@ print_computer: ; index in rax
     
     call print_nl_new
     ret
+    
     
 search_computer_id:
     
