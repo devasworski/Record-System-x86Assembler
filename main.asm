@@ -439,9 +439,9 @@ delete_computer_from_array:
     ret
 
 ; Adds a computer id to the new computer in the array
-; rbx: INT32
+; rbx: INT32 computer id
 ;
-add_computer_id: ;read from rbx
+add_computer_id: 
     mov rax, QWORD[computer_index]
     mov R11, 17
     mul R11
@@ -452,7 +452,7 @@ add_computer_id: ;read from rbx
     ret
     
     
-; Add a ip tp the new computer in the array
+; Add a ip to the new computer in the array
 ; rbx: string* ip in format XXX.XXX.XXX.XXX
 ;
 ; check 1: input format correct, asks to enter it again if not
@@ -547,7 +547,7 @@ add_computer_ip:
 ; rbx: INT32 user id
 ;   
 ; should check in advance, if the user id exists
-add_computer_main_user_id: ;read from rbx
+add_computer_main_user_id:
     mov rax, QWORD[computer_index]
     mov R11, 17
     mul R11
@@ -560,9 +560,9 @@ add_computer_main_user_id: ;read from rbx
 ; As the enumaration of the OS to the new computer
 ; rbx: INT8 os
 ;
-; check in advance if os enumaration correct
+; check in advance if os enumaration is correct
 ;
-add_computer_os: ;read from rbx
+add_computer_os:
     mov rax, QWORD[computer_index]
     mov R11, 17
     mul R11
@@ -578,7 +578,7 @@ add_computer_os: ;read from rbx
 ; check 1: date in valid format, other asks to enter again
 ; check 2: check of day between 1-31, month between 1-12 and year between 1900-2100, other asks to enter again
 ; check 3: check if date equals today or past. If date in future, then asks to enter again
-add_computer_purchase_date: ;read from rbx
+add_computer_purchase_date:
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -830,7 +830,7 @@ search_computer_id:
 ; No check if ID in valid format. Invalid input will not crash but give error 504
 ;
 ; return rax: INT64 index
-; error rax: INT64 504 computer not found
+; error rax: INT64 504 user not found
 ; 
 search_user_id:
     
@@ -1122,7 +1122,7 @@ main:
 ; 2. Manage Computers
 ; 3. Search 
 ; 4. EXIT
-; check: if user selection valid and then calls the selected menu
+; check: if user selection valid and then calls the selected menu, otherwise asks for reseletion
 ;
 main_menu:   
     push  rbp
@@ -1559,7 +1559,7 @@ add_computer:
     call print_nl_new
     jmp .ask_for_os
 
-; Shows the Input Masks for adding a User
+; Shows the Input Masks for deleting a Computer
 ;
 ; check 1: computer id valid format
 ; check 2: compiter id exists
@@ -1606,7 +1606,7 @@ delete_computer:
 ; Shows the Input Masks for searching a User
 ;
 ; User can exit by enter x
-; check 1: user id valid format   
+; check 1: user id has valid format   
 ;   
 search_user:
     mov rdi, QWORD user_search_welcome
@@ -1652,7 +1652,7 @@ search_user:
     
 ; Shows the Input Masks for searching a computer
 ;
-; User can exit by enter x
+; computer can exit by enter x
 ; check 1: computer id valid format   
 ;                  
 search_computer:
