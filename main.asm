@@ -5,7 +5,7 @@ global main
 section .data
 
 ;Main Menu texts
-hello1: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,10,"Today is the: ",0
+start_msg: db "--------------------------------------------------------------------",10,"STUDENT AND COMPUTER ORGANISER 3000",10,"--------------------------------------------------------------------",10,"© Alexander Sworski 19131287",10,10,"Today is the: ",0
 main_optionselect: db 10,"Please select one of the following options:",10,10,"1. Manage Users",10,"2. Manage Computers",10,"3. Search",10,"4. EXIT",10,10,"Enter the number of the menu you want to enter:",10,0
 
 ;error messages
@@ -134,7 +134,10 @@ computers: times 8500 db 0
 
 section .text
 
-print_id: ;read from rdi
+; Prints the ID int he Fromat XXXXXXX\n
+; rdi: INT32 id
+;
+print_id:
     mov R9,7
     mov rax, rdi
     mov R15, rdi
@@ -163,9 +166,14 @@ print_id: ;read from rdi
     call print_uint_new 
     call print_nl_new
     ret
-
+    
+    
+; Prints the curent date in the Format d.m.yyyy
+; call get_current_date before
+;
 print_current_date:
     xor rdi, rdi
+    mov R13, QWORD currentdate
     mov dil, BYTE[R13]
     call print_uint_new
     mov rdi, 46
@@ -181,9 +189,10 @@ print_current_date:
     mov di, WORD[R13+2]
     call print_uint_new
     ret
-    
+
+; save the current date to currentdate 
+;
 get_current_date:
-    mov rbp, rsp; for correct debugging 
     push  rbp
     mov rbp, rsp
     sub rsp, 32
@@ -231,7 +240,12 @@ get_current_date:
     pop rbp
     ret
 
-print_os:; index in rdx
+; Prints the name of the OS
+; rdx: INT8  index
+;
+; prints error to the screen if index out of bound
+;
+print_os:
     cmp rdx, 1
     je .w
     cmp rdx, 2
@@ -254,7 +268,12 @@ print_os:; index in rdx
     call print_string_new
     ret
 
-print_department:; index in rdx
+; Prints the name of the department
+; rdx: INT8  index
+;
+; prints error to the screen if index out of bound
+;
+print_department:
     cmp rdx, 1
     je .it
     cmp rdx, 2
@@ -281,16 +300,21 @@ print_department:; index in rdx
     call print_string_new
     ret
 
-
-delete_user_from_array: ; index in rax
+; Deletes a User at index from the Array
+; rax: INT64 index
+;
+; moves all folowing users one place forward in the array
+; WARNING: no check if index in bound 
+;
+delete_user_from_array:
 
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
     
-    mov QWORD [rsp+16], rax ;index+1
+    mov QWORD [rsp+16], rax;index+1
     inc QWORD [rsp+16]
-    mov QWORD [rsp+8], rax ;index
+    mov QWORD [rsp+8], rax;index
 
 .loop1:
     mov QWORD [rsp+24], 0;counter
@@ -345,16 +369,21 @@ delete_user_from_array: ; index in rax
     add rsp, 32
     ret
 
-
-delete_computer_from_array: ; index in rax
+; Deletes a Computer at index from the Array
+; rax: INT64 index
+;
+; moves all folowing computer one place forward in the array
+; WARNING: no check if index in bound 
+;
+delete_computer_from_array:
 
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
     
-    mov QWORD [rsp+16], rax ;index+1
+    mov QWORD [rsp+16], rax;index+1
     inc QWORD [rsp+16]
-    mov QWORD [rsp+8], rax ;index
+    mov QWORD [rsp+8], rax;index
 
 .loop1:
     mov QWORD [rsp+24], 0;counter
@@ -409,6 +438,9 @@ delete_computer_from_array: ; index in rax
     add rsp, 32
     ret
 
+; Adds a computer id to the new computer in the array
+; rbx: INT32
+;
 add_computer_id: ;read from rbx
     mov rax, QWORD[computer_index]
     mov R11, 17
@@ -419,7 +451,14 @@ add_computer_id: ;read from rbx
     mov DWORD[rax], edx
     ret
     
-add_computer_ip: ;read from rbx
+    
+; Add a ip tp the new computer in the array
+; rbx: string* ip in format XXX.XXX.XXX.XXX
+;
+; check 1: input format correct, asks to enter it again if not
+; check 2: checks if the IP is already used by a different computer in the array
+;
+add_computer_ip:
     push  rbp
     mov rbp, rsp
     sub rsp, 32 
@@ -503,7 +542,11 @@ add_computer_ip: ;read from rbx
     pop rbp
     add rsp, 32
     ret
-    
+
+; Adds a user id to the new computer
+; rbx: INT32 user id
+;   
+; should check in advance, if the user id exists
 add_computer_main_user_id: ;read from rbx
     mov rax, QWORD[computer_index]
     mov R11, 17
@@ -513,7 +556,12 @@ add_computer_main_user_id: ;read from rbx
     mov edx, DWORD ebx
     mov [rax], edx
     ret
-    
+
+; As the enumaration of the OS to the new computer
+; rbx: INT8 os
+;
+; check in advance if os enumaration correct
+;
 add_computer_os: ;read from rbx
     mov rax, QWORD[computer_index]
     mov R11, 17
@@ -524,7 +572,12 @@ add_computer_os: ;read from rbx
     mov BYTE [rax], dl
     ret
     
-    
+; Adds the purchase date to the new computer
+; rbx: string* date in format dd.mm.yyyy
+;
+; check 1: date in valid format, other asks to enter again
+; check 2: check of day between 1-31, month between 1-12 and year between 1900-2100, other asks to enter again
+; check 3: check if date equals today or past. If date in future, then asks to enter again
 add_computer_purchase_date: ;read from rbx
     push  rbp
     mov rbp, rsp
@@ -603,7 +656,7 @@ add_computer_purchase_date: ;read from rbx
     mov rdi, rsp
     call atoi
     cmp rax, 1900
-    jle .input_error
+    jl .input_error
     cmp rax, 2100
     jg .input_error
     
@@ -653,8 +706,12 @@ add_computer_purchase_date: ;read from rbx
     call read_string_new
     mov rbx, rax
     jmp .restart
-    
-print_computer: ; index in rax
+
+; Prints computer at index
+; rax: INT64 index
+;  
+;WARNING: no check for index out of bound
+print_computer:
     mov R11, 17
     mul R11
     mov R10, rax
@@ -729,7 +786,14 @@ print_computer: ; index in rax
     call print_nl_new
     ret
     
-    
+; Searches for a Computer with the ID
+; R13: INT32 Computer ID
+;
+; No check if ID in valid format. Invalid input will not crash but give error 504
+;
+; return rax: INT64 index
+; error rax: INT64 504 computer not found
+; 
 search_computer_id:
     
     push  rbp
@@ -737,7 +801,7 @@ search_computer_id:
     sub rsp, 32 
     mov QWORD[rbp-8], 0
     
-.loop: ; search id in R13
+.loop:
     mov rdx, QWORD[computer_index]
     cmp [rbp-8], rdx
     je .failed
@@ -750,17 +814,24 @@ search_computer_id:
     inc QWORD[rbp-8]
     cmp R13D, [rax]
     jne .loop
-    mov rax, R14;return index in rax
+    mov rax, R14
     pop rbp
     add rsp, 32
     ret
 .failed:
-    mov rax, 504 ;return error 504 in rax
+    mov rax, 504
     pop rbp
     add rsp, 32
     ret
 
-
+; Searches for a User with the ID
+; R13: INT32 User ID
+;
+; No check if ID in valid format. Invalid input will not crash but give error 504
+;
+; return rax: INT64 index
+; error rax: INT64 504 computer not found
+; 
 search_user_id:
     
     push  rbp
@@ -790,7 +861,11 @@ search_user_id:
     pop rbp
     add rsp, 32
     ret  
-
+    
+; Add User Name of new User
+; rbx: string* name
+;
+; check 1: if string lenght between 1 and 64, otherwise asks to enter again 
 add_user_name:
     mov rax, QWORD[user_index]
     mov R11, 200
@@ -798,7 +873,7 @@ add_user_name:
     mov R10, rax
     lea rax, [users+R10]
     mov rcx, 0
-.loop: ;read from rbx
+.loop:
     cmp rcx, 65
     je .tolong
     mov dl, BYTE[rbx]
@@ -826,6 +901,10 @@ add_user_name:
     mov rbx, rax
     jmp add_user_name
 
+; Add User First Name of new User
+; rbx: string* name
+;
+; check 1: if string lenght between 1 and 64, otherwise asks to enter again 
 add_user_firstname:
     mov rax, QWORD[user_index]
     mov R11, 200
@@ -860,7 +939,12 @@ add_user_firstname:
     call read_string_new
     mov rbx, rax
     jmp add_user_firstname
-    
+
+; Adds the department enummaration to the new User
+; rbx: INT8 department
+;
+; The department will not be checked and should be checked beforehand 
+;    
 add_user_department:
     mov rax, QWORD[user_index]
     mov R11, 200
@@ -870,7 +954,13 @@ add_user_department:
     mov dl, BYTE bl
     mov [rax], dl
     ret
-    
+
+; Add the user email to the new user
+; rbx: string* email
+;
+; check 1: if string between 1 and 64 chars long, otherwise ask to reenter
+; check 2: check if email has not yet been taken by another user in the array, otherwise ask to reenter
+;
 add_user_email:
     push  rbp
     mov rbp, rsp
@@ -882,7 +972,7 @@ add_user_email:
     mov R10, rax
     lea rax, [users+R10+131]
     mov rcx, 0
-.loop: ;read from rbx
+.loop:
     cmp rcx, 65
     je .tolong
     mov dl, BYTE[rbx]
@@ -943,6 +1033,10 @@ add_user_email:
     add rsp, 32
     ret
 
+; Add the id to the new user
+; rbx: INT32 ID
+;
+; does not check if ID unique, needs to be checked before!
 add_user_id:
     mov rax, QWORD[user_index]
     mov R11, 200
@@ -953,8 +1047,11 @@ add_user_id:
     mov edx, DWORD ebx
     mov [rax], edx
     ret
-    
-print_user: ;index in rax
+
+; Prints the user at index
+; rax: INT64 index
+;    
+print_user:
     mov R11, 200
     mul R11
     mov R10, rax
@@ -994,14 +1091,19 @@ print_user: ;index in rax
 
     
     
-
+; main
+;
+; Prints welcoem message
+; calls get_current_date
+; calls main_menu
+;
 main:
     mov rbp, rsp
     push  rbp
     mov rbp, rsp
     sub rsp, 32
 
-    mov rdi, QWORD hello1
+    mov rdi, QWORD start_msg
     call print_string_new
     call get_current_date
     call print_current_date
@@ -1011,7 +1113,17 @@ main:
     pop rbp
     add rsp, 32
     ret
-    
+
+; shows main menu
+;
+; prints options in the main menu and waits for user selection
+; Options:
+; 1. Manage Users 
+; 2. Manage Computers
+; 3. Search 
+; 4. EXIT
+; check: if user selection valid and then calls the selected menu
+;
 main_menu:   
     push  rbp
     mov rbp, rsp
@@ -1048,7 +1160,16 @@ main_menu:
     pop rbp
     add rsp, 32
     ret
-    
+
+; shows user menu
+;
+; prints options in the user menu and waits for user selection
+; Options:
+; 1. Add Users 
+; 2. Delete User
+; 3. Go back to main menu 
+; check: if user selection valid and then calls the selected option
+;    
 user_menu:   
     push  rbp
     mov rbp, rsp
@@ -1083,7 +1204,16 @@ user_menu:
     pop rbp
     add rsp, 32
     ret
-    
+ 
+; shows computer menu
+;
+; prints options in the computer menu and waits for user selection
+; Options:
+; 1. Add Computer 
+; 2. Delete Computer
+; 3. Go back to main menu 
+; check: if user selection valid and then calls the selected option
+;       
 computer_menu:   
     push  rbp
     mov rbp, rsp
@@ -1118,7 +1248,21 @@ computer_menu:
     pop rbp
     add rsp, 32
     ret
-    
+
+; shows search menu
+;
+; prints options in the search menu and waits for user selection
+; Options:
+; 1. Search Computer
+; 2. Search Users 
+; 3. Search Main User
+; 4. Print all User
+; 5. Print all Computer
+; 6. Amount of Users
+; 7. Amount of Computers
+; 8. Go back to main menu 
+; check: if user selection valid and then calls the selected option
+;       
 search_menu:   
     push  rbp
     mov rbp, rsp
@@ -1179,7 +1323,13 @@ search_menu:
     add rsp, 32
     ret
     
- 
+; Shows the Input Masks for adding a User
+;
+; check 1: department code betweem 1-3
+; check 2: user id valid format
+; check 3: user id unique
+; check 4: user array still has space
+;
 add_user:
     mov rdx, QWORD[user_index]
     cmp rdx, 99
@@ -1258,7 +1408,11 @@ add_user:
     call print_nl_new
     jmp .ask_for_dept
     
-    
+; Shows the Input Masks for deleting a User
+;
+; check 1: user id valid format
+; check 2: user id exists
+;
 delete_user:
     mov rdi, QWORD delte_user_menu_welcome
     call print_string_new
@@ -1295,7 +1449,15 @@ delete_user:
     jmp .end
 
 
-
+; Shows the Input Masks for adding a Computer
+;
+; check 1: os code betweem 1-3
+; check 2: computer id valid format
+; check 3: computer id unique
+; check 4: computer array still has space
+; check 5: main user id exists
+; check 6: main user id valid format
+;
 add_computer:
     mov rdx, QWORD[computer_index]
     cmp rdx, 499
@@ -1397,6 +1559,11 @@ add_computer:
     call print_nl_new
     jmp .ask_for_os
 
+; Shows the Input Masks for adding a User
+;
+; check 1: computer id valid format
+; check 2: compiter id exists
+;
 delete_computer:
     mov rdi, QWORD delte_computer_menu_welcome
     call print_string_new
@@ -1435,7 +1602,12 @@ delete_computer:
     call print_string_new
     call print_nl_new
     jmp .end
-        
+
+; Shows the Input Masks for searching a User
+;
+; User can exit by enter x
+; check 1: user id valid format   
+;   
 search_user:
     mov rdi, QWORD user_search_welcome
     call print_string_new
@@ -1451,6 +1623,10 @@ search_user:
     mov rdi, rax
     call atoi
     mov R13, rax
+    cmp R13, 9999999
+    jge .id_error
+    cmp R13, 0
+    jle .id_error
     call search_user_id
     cmp rax, 504
     jne .exists    
@@ -1468,7 +1644,17 @@ search_user:
     jmp .loop
 .end:
     ret
-                
+.id_error:
+    mov rdi, QWORD inputerror 
+    call print_string_new
+    call print_nl_new
+    jmp .loop
+    
+; Shows the Input Masks for searching a computer
+;
+; User can exit by enter x
+; check 1: computer id valid format   
+;                  
 search_computer:
     mov rdi, QWORD computer_search_welcome
     call print_string_new
@@ -1511,7 +1697,11 @@ search_computer:
     call print_nl_new
     jmp .loop
 
-
+; Shows the Input Masks for searching a main user of a computer
+;
+; User can exit by enter x
+; check 1: computer id valid format   
+; 
 find_main_user:
     mov rdi, QWORD computer_user_search_welcome
     call print_string_new
@@ -1565,7 +1755,9 @@ find_main_user:
     call print_string_new
     call print_nl_new
     jmp .loop
-    
+
+; Prints all users
+;   
 print_all_user:
     push rbp
     mov rbp, rsp
@@ -1596,7 +1788,7 @@ print_all_user:
     add rsp, 32
     ret
 
-
+; Prints all Computers
 print_all_computer:
     push rbp
     mov rbp, rsp
@@ -1626,7 +1818,9 @@ print_all_computer:
     pop rbp
     add rsp, 32
     ret
-    
+
+; Prints the amount of Users currently stored
+;
 print_num_users:
     mov rdi, QWORD amount_users
     call print_string_new
@@ -1634,6 +1828,9 @@ print_num_users:
     call print_uint_new
     call print_nl_new
     ret
+    
+; Prints the amount of computers currently stored
+;
 print_num_computers:
     mov rdi, QWORD amount_computers
     call print_string_new
