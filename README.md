@@ -8,12 +8,12 @@ Module Leader: Dr Muhammad Hilmi Kamarudin
 
 Semester 2 
 
-Due: 26th February 2021.
+Due: 5th March 2021.
 
 #### Final Mark: ?/100
 
 ## Assignment
-Write, in 64 bit x86 assembler, a simple record system to help admin keep track of their computers.
+Write, in 64 bit x86 assembler, a simple record system to keep track of computers and users.
 
 ## Requirements
 
