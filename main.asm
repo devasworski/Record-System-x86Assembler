@@ -25,7 +25,7 @@ ask_for_department_input: db "Please choose the department:",10,"1. IT Support",
 ask_for_user_id_input: db "Please enter the USER ID in the Format XXXXXXX:",0
 ask_for_differnt_user_id_input: db "Sorry, but this USER ID is already taken",0
 ask_for_emai_input: db "Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
-ask_for_differnet_email_input: db "This emailadress is already in use. Please choose a different email adress!",10,"Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
+ask_for_differnet_email_input: db "This emailadress is already in use. Please choose a different email address!",10,"Please enter the email of the user:",10,"(@helpdesk.co.uk will be automatically added to your input)",0
 confirm_user_input: db "Thank you. The Following User has been created:",10,0
  ;delte user textss
 delte_user_menu_welcome: db 10,"You selected: Delte a user",0
