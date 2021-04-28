@@ -10,7 +10,7 @@ Semester 2
 
 Due: 5th March 2021.
 
-#### Final Mark: ?/100
+#### Final Mark: Distinction (88/100)
 
 ## Assignment
 Write, in 64 bit x86 assembler, a simple record system to keep track of computers and users.
